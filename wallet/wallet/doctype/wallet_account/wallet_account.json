@@ -116,13 +116,14 @@
   },
   {
    "default": "0",
-   "description": "Balance as on the opening date. Held as a field rather than a synthetic transaction, so it never pollutes transaction lists, category reports or deduplication.",
+   "description": "Balance at the START of the opening date, before any transaction dated that day. This is exactly what a bank statement prints as its period opening balance. Held as a field rather than a synthetic transaction, so it never pollutes transaction lists, category reports or deduplication.",
    "fieldname": "opening_balance",
    "fieldtype": "Currency",
    "label": "Opening Balance",
    "options": "currency"
   },
   {
+   "description": "First day you are tracking this account. Transactions dated before it are rejected, so set it to the first day of your earliest statement.",
    "fieldname": "opening_date",
    "fieldtype": "Date",
    "label": "Opening Date",
