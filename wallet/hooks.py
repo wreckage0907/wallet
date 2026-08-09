@@ -260,4 +260,67 @@ require_type_annotated_api_methods = True
 # ignore_translatable_strings_from = []
 
 
-website_route_rules = [{'from_route': '/frontend/<path:app_path>', 'to_route': 'frontend'},]
+website_route_rules = [
+	{"from_route": "/wallet/<path:app_path>", "to_route": "wallet"},
+]
+
+# Shows Wallet on the /apps screen and in the desk app switcher.
+add_to_apps_screen = [
+	{
+		"name": "wallet",
+		"logo": "/assets/wallet/frontend/favicon.svg",
+		"title": "Wallet",
+		"route": "/wallet",
+		"has_permission": "wallet.api.permission.has_app_permission",
+	}
+]
+
+app_icon_url = "/assets/wallet/frontend/favicon.svg"
+app_icon_title = "Wallet"
+app_icon_route = "/wallet"
+
+# Serves /wallet_sw.js and /wallet_manifest.json from the site root. A service worker
+# only controls URLs at or below its own directory, and the built assets sit under
+# /assets/, which cannot reach /wallet. See wallet/pwa.py.
+page_renderer = ["wallet.pwa.PWAAssetRenderer"]
+
+# Wallet
+# ------------------------------------------------------------------------------
+
+# Roles and per-user default categories / categorization rules.
+# `before_install` runs before doctype sync, which is where the Wallet User role must
+# already exist; see wallet/install.py.
+before_install = "wallet.install.before_install"
+after_install = "wallet.install.after_install"
+
+doc_events = {
+	"User": {
+		"after_insert": "wallet.install.seed_user_defaults_for_new_user",
+	},
+}
+
+# `cached_balance` is a display convenience only; the nightly rebuild is its repair path.
+scheduler_events = {
+	"daily": [
+		"wallet.api.balance.rebuild_all_balances",
+	],
+}
+
+# Owner-based data isolation. Every personal doctype is filtered to its owner in list
+# and report queries; see the module docstring in wallet/permissions.py for the caveat
+# about frappe.get_all bypassing this.
+permission_query_conditions = {
+	doctype: "wallet.permissions.get_permission_query_conditions"
+	for doctype in (
+		"Wallet Account",
+		"Wallet Transaction",
+		"Wallet Category",
+		"Wallet Categorization Rule",
+		"Wallet Statement Import",
+		"Wallet Budget",
+	)
+}
+
+has_permission = {
+	doctype: "wallet.permissions.has_permission" for doctype in permission_query_conditions
+}

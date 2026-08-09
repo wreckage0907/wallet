@@ -1,0 +1,62 @@
+{
+ "actions": [],
+ "creation": "2026-08-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "target_field",
+  "column_label",
+  "column_index",
+  "transform"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "target_field",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Target Field",
+   "options": "posting_date\nvalue_date\ndescription\nreference_number\ndebit\ncredit\namount\ndr_cr_indicator\nbalance_after\ncounterparty",
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "description": "Header text as it appears in the file. Survives column reordering.",
+   "fieldname": "column_label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Column Header"
+  },
+  {
+   "columns": 2,
+   "description": "Zero-based position. The fallback for banks that emit blank or merged header cells.",
+   "fieldname": "column_index",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Column Index"
+  },
+  {
+   "columns": 2,
+   "default": "None",
+   "fieldname": "transform",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Transform",
+   "options": "None\nStrip\nUppercase\nAbsolute"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Wallet",
+ "name": "Wallet Statement Column Mapping",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

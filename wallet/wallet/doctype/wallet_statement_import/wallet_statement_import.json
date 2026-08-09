@@ -1,0 +1,255 @@
+{
+ "actions": [],
+ "autoname": "IMP-.YYYY.-.#####",
+ "creation": "2026-08-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "account",
+  "statement_file",
+  "file_password",
+  "col_break_1",
+  "status",
+  "statement_format",
+  "period_from",
+  "period_to",
+  "summary_section",
+  "total_rows",
+  "new_rows",
+  "duplicate_rows",
+  "col_break_2",
+  "error_rows",
+  "imported_rows",
+  "skipped_rows",
+  "recon_section",
+  "statement_opening_balance",
+  "statement_closing_balance",
+  "col_break_3",
+  "computed_closing_balance",
+  "balance_variance",
+  "rows_section",
+  "rows",
+  "system_section",
+  "detected_mapping",
+  "header_row",
+  "header_labels",
+  "error_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Account",
+   "options": "Wallet Account",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "statement_file",
+   "fieldtype": "Attach",
+   "label": "Statement File"
+  },
+  {
+   "description": "Only needed for password-protected statements. Cleared once the file has been read.",
+   "fieldname": "file_password",
+   "fieldtype": "Password",
+   "label": "File Password"
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nParsing\nPreview Ready\nImporting\nCompleted\nPartially Completed\nFailed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "statement_format",
+   "fieldtype": "Link",
+   "label": "Statement Format",
+   "options": "Wallet Statement Format"
+  },
+  {
+   "fieldname": "period_from",
+   "fieldtype": "Date",
+   "label": "Period From",
+   "read_only": 1
+  },
+  {
+   "fieldname": "period_to",
+   "fieldtype": "Date",
+   "label": "Period To",
+   "read_only": 1
+  },
+  {
+   "fieldname": "summary_section",
+   "fieldtype": "Section Break",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "total_rows",
+   "fieldtype": "Int",
+   "label": "Total Rows",
+   "read_only": 1
+  },
+  {
+   "fieldname": "new_rows",
+   "fieldtype": "Int",
+   "label": "New",
+   "read_only": 1
+  },
+  {
+   "fieldname": "duplicate_rows",
+   "fieldtype": "Int",
+   "label": "Duplicates",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "error_rows",
+   "fieldtype": "Int",
+   "label": "Errors",
+   "read_only": 1
+  },
+  {
+   "fieldname": "imported_rows",
+   "fieldtype": "Int",
+   "label": "Imported",
+   "read_only": 1
+  },
+  {
+   "fieldname": "skipped_rows",
+   "fieldtype": "Int",
+   "label": "Skipped",
+   "read_only": 1
+  },
+  {
+   "fieldname": "recon_section",
+   "fieldtype": "Section Break",
+   "label": "Reconciliation"
+  },
+  {
+   "fieldname": "statement_opening_balance",
+   "fieldtype": "Currency",
+   "label": "Statement Opening Balance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "statement_closing_balance",
+   "fieldtype": "Currency",
+   "label": "Statement Closing Balance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "computed_closing_balance",
+   "fieldtype": "Currency",
+   "label": "Computed Closing Balance",
+   "read_only": 1
+  },
+  {
+   "description": "Computed minus stated. Anything other than zero means a row was missed, over-deduplicated or mis-parsed - it is the single best check on the whole import.",
+   "fieldname": "balance_variance",
+   "fieldtype": "Currency",
+   "label": "Variance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rows_section",
+   "fieldtype": "Section Break",
+   "label": "Rows"
+  },
+  {
+   "fieldname": "rows",
+   "fieldtype": "Table",
+   "label": "Rows",
+   "options": "Wallet Statement Import Row"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "system_section",
+   "fieldtype": "Section Break",
+   "label": "System"
+  },
+  {
+   "description": "Editable before commit. Correct it here and re-parse if a column was guessed wrong.",
+   "fieldname": "detected_mapping",
+   "fieldtype": "Code",
+   "label": "Detected Mapping",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "header_row",
+   "fieldtype": "Int",
+   "label": "Header Row",
+   "read_only": 1
+  },
+  {
+   "description": "The header row as read from the file. Kept so 'Save as Format' never has to re-open the statement, which it could not do anyway once the password has been cleared.",
+   "fieldname": "header_labels",
+   "fieldtype": "Code",
+   "label": "Header Labels",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_log",
+   "fieldtype": "Long Text",
+   "label": "Error Log",
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-upload",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Wallet",
+ "name": "Wallet Statement Import",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Wallet User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}
