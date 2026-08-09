@@ -260,7 +260,29 @@ require_type_annotated_api_methods = True
 # ignore_translatable_strings_from = []
 
 
-website_route_rules = [{'from_route': '/frontend/<path:app_path>', 'to_route': 'frontend'},]
+website_route_rules = [
+	{"from_route": "/wallet/<path:app_path>", "to_route": "wallet"},
+]
+
+# Shows Wallet on the /apps screen and in the desk app switcher.
+add_to_apps_screen = [
+	{
+		"name": "wallet",
+		"logo": "/assets/wallet/frontend/favicon.svg",
+		"title": "Wallet",
+		"route": "/wallet",
+		"has_permission": "wallet.api.permission.has_app_permission",
+	}
+]
+
+app_icon_url = "/assets/wallet/frontend/favicon.svg"
+app_icon_title = "Wallet"
+app_icon_route = "/wallet"
+
+# Serves /wallet_sw.js and /wallet_manifest.json from the site root. A service worker
+# only controls URLs at or below its own directory, and the built assets sit under
+# /assets/, which cannot reach /wallet. See wallet/pwa.py.
+page_renderer = ["wallet.pwa.PWAAssetRenderer"]
 
 # Wallet
 # ------------------------------------------------------------------------------

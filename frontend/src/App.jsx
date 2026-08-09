@@ -1,38 +1,37 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
-import { FrappeProvider } from 'frappe-react-sdk'
-function App() {
-  const [count, setCount] = useState(0)
+import { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-  return (
-	<div className="App">
-	  <FrappeProvider>
-		<div>
-	  <div>
-		<a href="https://vitejs.dev" target="_blank">
-		  <img src="/vite.svg" className="logo" alt="Vite logo" />
-		</a>
-		<a href="https://reactjs.org" target="_blank">
-		  <img src={reactLogo} className="logo react" alt="React logo" />
-		</a>
-	  </div>
-	  <h1>Vite + React + Frappe</h1>
-	  <div className="card">
-		<button onClick={() => setCount((count) => count + 1)}>
-		  count is {count}
-		</button>
-		<p>
-		  Edit <code>src/App.jsx</code> and save to test HMR
-		</p>
-	  </div>
-	  <p className="read-the-docs">
-		Click on the Vite and React logos to learn more
-	  </p>
-	  </div>
-	  </FrappeProvider>
-	</div>
-  )
+import BottomNav from "./components/BottomNav.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Accounts from "./pages/Accounts.jsx";
+import AccountDetail from "./pages/AccountDetail.jsx";
+import Transactions from "./pages/Transactions.jsx";
+import Settings from "./pages/Settings.jsx";
+import { useEnsureSetup } from "./lib/api.js";
+
+export default function App() {
+	const { call: ensureSetup } = useEnsureSetup();
+
+	// Users who existed before the app was installed never fired the User.after_insert
+	// hook, so they have no categories. This is the lazy catch-up; it is a no-op once
+	// they have any.
+	useEffect(() => {
+		ensureSetup().catch(() => {});
+	}, [ensureSetup]);
+
+	return (
+		<div className="min-h-full" style={{ background: "var(--surface-sunken)" }}>
+			<main className="mx-auto w-full max-w-lg pb-24">
+				<Routes>
+					<Route path="/" element={<Dashboard />} />
+					<Route path="/accounts" element={<Accounts />} />
+					<Route path="/accounts/:name" element={<AccountDetail />} />
+					<Route path="/transactions" element={<Transactions />} />
+					<Route path="/settings" element={<Settings />} />
+					<Route path="*" element={<Navigate to="/" replace />} />
+				</Routes>
+			</main>
+			<BottomNav />
+		</div>
+	);
 }
-
-export default App
