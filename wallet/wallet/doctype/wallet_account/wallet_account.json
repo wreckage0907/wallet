@@ -17,6 +17,7 @@
   "include_in_net_worth",
   "disabled",
   "color",
+  "default_statement_format",
   "opening_section",
   "opening_balance",
   "opening_date",
@@ -100,6 +101,13 @@
    "fieldname": "color",
    "fieldtype": "Color",
    "label": "Colour"
+  },
+  {
+   "description": "Remembered layout for this account's statements, so repeat imports skip the mapping step.",
+   "fieldname": "default_statement_format",
+   "fieldtype": "Link",
+   "label": "Default Statement Format",
+   "options": "Wallet Statement Format"
   },
   {
    "fieldname": "opening_section",

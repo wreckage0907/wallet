@@ -28,6 +28,7 @@
   "signed_amount",
   "balance_after",
   "source",
+  "statement_import",
   "col_break_3",
   "dedup_hash"
  ],
@@ -184,6 +185,14 @@
    "in_standard_filter": 1,
    "label": "Source",
    "options": "Manual\nStatement Import\nRecurring",
+   "read_only": 1
+  },
+  {
+   "fieldname": "statement_import",
+   "fieldtype": "Link",
+   "label": "Statement Import",
+   "no_copy": 1,
+   "options": "Wallet Statement Import",
    "read_only": 1
   },
   {
