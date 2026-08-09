@@ -261,3 +261,37 @@ require_type_annotated_api_methods = True
 
 
 website_route_rules = [{'from_route': '/frontend/<path:app_path>', 'to_route': 'frontend'},]
+
+# Wallet
+# ------------------------------------------------------------------------------
+
+# Roles and per-user default categories / categorization rules.
+# `before_install` runs before doctype sync, which is where the Wallet User role must
+# already exist; see wallet/install.py.
+before_install = "wallet.install.before_install"
+after_install = "wallet.install.after_install"
+
+doc_events = {
+	"User": {
+		"after_insert": "wallet.install.seed_user_defaults_for_new_user",
+	},
+}
+
+# Owner-based data isolation. Every personal doctype is filtered to its owner in list
+# and report queries; see the module docstring in wallet/permissions.py for the caveat
+# about frappe.get_all bypassing this.
+permission_query_conditions = {
+	doctype: "wallet.permissions.get_permission_query_conditions"
+	for doctype in (
+		"Wallet Account",
+		"Wallet Transaction",
+		"Wallet Category",
+		"Wallet Categorization Rule",
+		"Wallet Statement Import",
+		"Wallet Budget",
+	)
+}
+
+has_permission = {
+	doctype: "wallet.permissions.has_permission" for doctype in permission_query_conditions
+}
