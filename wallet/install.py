@@ -170,7 +170,7 @@ def seed_rules() -> int:
 	created = 0
 	for rule_name, pattern, category_name, direction, priority in DEFAULT_RULES:
 		if frappe.db.exists(
-			"Wallet Categorization Rule", {"rule_name": rule_name, "owner": frappe.session.user}
+			"Wallet Categorization Rule", {"default_key": rule_name, "owner": frappe.session.user}
 		):
 			continue
 
@@ -192,6 +192,7 @@ def seed_rules() -> int:
 				"category": category,
 				"priority": priority,
 				"is_default": 1,
+				"default_key": rule_name,
 			}
 		).insert(ignore_permissions=True)
 		created += 1

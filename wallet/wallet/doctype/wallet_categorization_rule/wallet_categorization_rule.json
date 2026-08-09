@@ -1,0 +1,209 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-09 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "enabled",
+  "priority",
+  "col_break_1",
+  "category",
+  "is_default",
+  "default_key",
+  "match_section",
+  "match_field",
+  "match_type",
+  "pattern",
+  "col_break_2",
+  "direction_filter",
+  "account_filter",
+  "amount_min",
+  "amount_max",
+  "actions_section",
+  "set_counterparty",
+  "set_payment_mode",
+  "col_break_3",
+  "times_matched"
+ ],
+ "fields": [
+  {
+   "fieldname": "rule_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Rule Name",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "100",
+   "description": "Lower wins. The first matching rule sets the category and stops.",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Priority"
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Category",
+   "options": "Wallet Category",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Seeded by Install",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "default_key",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Default Key",
+   "no_copy": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "match_section",
+   "fieldtype": "Section Break",
+   "label": "Match"
+  },
+  {
+   "default": "description",
+   "fieldname": "match_field",
+   "fieldtype": "Select",
+   "label": "Match Field",
+   "options": "description\ncounterparty\nreference_number",
+   "reqd": 1
+  },
+  {
+   "default": "Contains",
+   "fieldname": "match_type",
+   "fieldtype": "Select",
+   "label": "Match Type",
+   "options": "Contains\nStarts With\nEquals\nRegex",
+   "reqd": 1
+  },
+  {
+   "description": "Matched case-insensitively against the raw bank narration.",
+   "fieldname": "pattern",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Pattern",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Any",
+   "fieldname": "direction_filter",
+   "fieldtype": "Select",
+   "label": "Direction",
+   "options": "Any\nIn\nOut"
+  },
+  {
+   "fieldname": "account_filter",
+   "fieldtype": "Link",
+   "label": "Only for Account",
+   "options": "Wallet Account"
+  },
+  {
+   "fieldname": "amount_min",
+   "fieldtype": "Currency",
+   "label": "Minimum Amount"
+  },
+  {
+   "fieldname": "amount_max",
+   "fieldtype": "Currency",
+   "label": "Maximum Amount"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "actions_section",
+   "fieldtype": "Section Break",
+   "label": "Also Set"
+  },
+  {
+   "fieldname": "set_counterparty",
+   "fieldtype": "Data",
+   "label": "Counterparty"
+  },
+  {
+   "fieldname": "set_payment_mode",
+   "fieldtype": "Select",
+   "label": "Payment Mode",
+   "options": "\nUPI\nCard\nNEFT\nIMPS\nRTGS\nATM\nCheque\nCash\nAuto Debit\nInterest\nCharges\nOther"
+  },
+  {
+   "fieldname": "col_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "times_matched",
+   "fieldtype": "Int",
+   "label": "Times Matched",
+   "no_copy": 1,
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-magic",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Wallet",
+ "name": "Wallet Categorization Rule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Wallet User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
+ "sort_field": "priority",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "rule_name",
+ "track_changes": 1
+}

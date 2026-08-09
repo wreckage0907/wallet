@@ -277,6 +277,13 @@ doc_events = {
 	},
 }
 
+# `cached_balance` is a display convenience only; the nightly rebuild is its repair path.
+scheduler_events = {
+	"daily": [
+		"wallet.api.balance.rebuild_all_balances",
+	],
+}
+
 # Owner-based data isolation. Every personal doctype is filtered to its owner in list
 # and report queries; see the module docstring in wallet/permissions.py for the caveat
 # about frappe.get_all bypassing this.
