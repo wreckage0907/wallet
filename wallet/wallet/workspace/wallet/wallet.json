@@ -1,0 +1,165 @@
+{
+ "app": "wallet",
+ "charts": [],
+ "content": "[{\"id\": \"hdr_money\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Money</b></span>\", \"col\": 12}}, {\"id\": \"sc_acc\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Wallet Account\", \"col\": 3}}, {\"id\": \"sc_txn\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Wallet Transaction\", \"col\": 3}}, {\"id\": \"sc_imp\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Import Statement\", \"col\": 3}}, {\"id\": \"sc_cat\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Wallet Category\", \"col\": 3}}, {\"id\": \"sp1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr_setup\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Setup</b></span>\", \"col\": 12}}, {\"id\": \"card_all\", \"type\": \"card\", \"data\": {\"card_name\": \"Tracking\", \"col\": 4}}, {\"id\": \"card_imp\", \"type\": \"card\", \"data\": {\"card_name\": \"Importing\", \"col\": 4}}, {\"id\": \"card_cfg\", \"type\": \"card\", \"data\": {\"card_name\": \"Configuration\", \"col\": 4}}]",
+ "creation": "2026-08-09 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "money-coins-1",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Wallet",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tracking",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Account",
+   "link_count": 0,
+   "link_to": "Wallet Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Transaction",
+   "link_count": 0,
+   "link_to": "Wallet Transaction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Category",
+   "link_count": 0,
+   "link_to": "Wallet Category",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Importing",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Statement Import",
+   "link_count": 0,
+   "link_to": "Wallet Statement Import",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Statement Format",
+   "link_count": 0,
+   "link_to": "Wallet Statement Format",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuration",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Categorization Rule",
+   "link_count": 0,
+   "link_to": "Wallet Categorization Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Bank",
+   "link_count": 0,
+   "link_to": "Wallet Bank",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Wallet Settings",
+   "link_count": 0,
+   "link_to": "Wallet Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-08-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Wallet",
+ "name": "Wallet",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Wallet Account",
+   "link_to": "Wallet Account",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Wallet Transaction",
+   "link_to": "Wallet Transaction",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Import Statement",
+   "link_to": "Wallet Statement Import",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "Tree",
+   "label": "Wallet Category",
+   "link_to": "Wallet Category",
+   "type": "DocType"
+  }
+ ],
+ "title": "Wallet",
+ "type": "Workspace"
+}
