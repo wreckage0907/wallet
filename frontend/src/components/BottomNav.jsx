@@ -1,11 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { Home, ListOrdered, Plus, Upload, Settings2 } from "lucide-react";
+import { Home, ListOrdered, Settings2 } from "lucide-react";
 
+// Add and Import land in phase 6. They are omitted rather than shown as dead tabs:
+// the wildcard route would bounce both straight back to the dashboard, which reads as
+// a broken button.
 const TABS = [
 	{ to: "/", icon: Home, label: "Home", end: true },
 	{ to: "/transactions", icon: ListOrdered, label: "Activity" },
-	{ to: "/add", icon: Plus, label: "Add", primary: true },
-	{ to: "/import", icon: Upload, label: "Import" },
 	{ to: "/settings", icon: Settings2, label: "More" },
 ];
 

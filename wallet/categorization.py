@@ -88,8 +88,9 @@ def _matches(rule: dict, txn: dict) -> bool:
 def categorize(txn: dict, rules: list[dict] | None = None) -> dict:
 	"""Return the fields the first matching rule wants to set.
 
-	Only ever returns keys in `_TARGETS`; the caller decides whether to apply them, and
-	Wallet Transaction applies them only when the field is still empty.
+	Returns the `_TARGETS` fields plus the name of the rule that matched. Pure: it never
+	writes. Call `record_match` when a transaction is actually created - see the note
+	there about why counting during preview was wrong.
 	"""
 	if rules is None:
 		rules = get_rules(txn.get("owner"))
@@ -98,18 +99,29 @@ def categorize(txn: dict, rules: list[dict] | None = None) -> dict:
 		if not _matches(rule, txn):
 			continue
 
-		frappe.db.set_value(
-			"Wallet Categorization Rule",
-			rule["name"],
-			"times_matched",
-			(frappe.db.get_value("Wallet Categorization Rule", rule["name"], "times_matched") or 0) + 1,
-			update_modified=False,
-		)
-
 		return {
 			"category": rule.get("category"),
 			"counterparty": rule.get("set_counterparty"),
 			"payment_mode": rule.get("set_payment_mode"),
+			"rule": rule["name"],
 		}
 
-	return dict.fromkeys(_TARGETS)
+	return {**dict.fromkeys(_TARGETS), "rule": None}
+
+
+def record_match(rule: str | None) -> None:
+	"""Count a rule match, atomically.
+
+	Deliberately separate from `categorize`, which runs while merely *previewing* an
+	import: counting there inflated the tally every time a user re-parsed or abandoned a
+	statement. A read-modify-write would also lose counts when two imports run at once.
+	"""
+	if not rule:
+		return
+
+	frappe.db.sql(
+		"""UPDATE `tabWallet Categorization Rule`
+		   SET times_matched = COALESCE(times_matched, 0) + 1
+		   WHERE name = %s""",
+		rule,
+	)

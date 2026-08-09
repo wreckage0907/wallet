@@ -55,11 +55,23 @@ class WalletTransaction(Document):
 		from wallet.categorization import categorize
 
 		match = categorize(self.as_dict())
+		self._matched_rule = match.pop("rule", None)
+
 		for field, value in match.items():
 			if value and not self.get(field):
 				self.set(field, value)
 
 	def set_dedup_hash(self) -> None:
+		"""Stamp the fingerprint once, on insert, and never recompute it.
+
+		Recomputing on every save would break the weakest dedup tier: editing the first of
+		two identical rows would re-derive an occurrence ordinal that now collides with the
+		second. The fingerprint identifies the statement row this transaction came from, so
+		it should not move when the transaction is later corrected.
+		"""
+		if self.dedup_hash:
+			return
+
 		self.dedup_hash = build_dedup_hash(
 			account=self.account,
 			posting_date=self.posting_date,
@@ -69,6 +81,13 @@ class WalletTransaction(Document):
 			balance_after=self.balance_after,
 			exclude=self.name if not self.is_new() else None,
 		)
+
+	def after_insert(self) -> None:
+		from wallet.categorization import record_match
+
+		# Counted here, not during categorization, so previewing an import does not
+		# inflate the tally.
+		record_match(getattr(self, "_matched_rule", None))
 
 	def on_update(self) -> None:
 		self.refresh_account_balance()
@@ -82,6 +101,12 @@ class WalletTransaction(Document):
 		"""Keep `cached_balance` fresh. This is a display convenience only: because it is
 		written by the same aggregate that reads, staleness is the worst failure mode -
 		it can never drift by accumulation the way an incremental counter does."""
+		# A statement import inserts thousands of rows in one go. Recomputing the account
+		# aggregate per row makes the import quadratic, so the importer sets this flag and
+		# refreshes the affected account exactly once at the end.
+		if frappe.flags.wallet_bulk_import:
+			return
+
 		from wallet.api.balance import refresh_cached_balance
 
 		refresh_cached_balance(self.account)

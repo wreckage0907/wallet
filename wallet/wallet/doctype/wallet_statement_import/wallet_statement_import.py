@@ -23,8 +23,9 @@ from wallet.categorization import categorize, get_rules
 from wallet.settings import get_setting
 from wallet.statement import detect
 from wallet.statement.parse import detect_dayfirst, parse_amount, parse_date
+from wallet.api.balance import refresh_cached_balance
 from wallet.statement.reader import read_grid
-from wallet.utils.dedup import build_dedup_hash
+from wallet.utils.dedup import build_dedup_hash, content_key, occurrence_index
 
 
 class WalletStatementImport(Document):
@@ -34,6 +35,18 @@ class WalletStatementImport(Document):
 			frappe.throw(_("Attach a statement file first."))
 
 		file_doc = frappe.get_doc("File", {"file_url": self.statement_file})
+
+		# `statement_file` is an Attach field, i.e. arbitrary text, so it can be pointed at
+		# any file URL on the site including another user's private upload. The only
+		# legitimate case is a file attached to this very import.
+		attached_here = (
+			file_doc.attached_to_doctype == self.doctype and file_doc.attached_to_name == self.name
+		)
+		if not attached_here:
+			file_doc.check_permission("read")
+			if file_doc.owner != frappe.session.user and frappe.session.user != "Administrator":
+				frappe.throw(_("That file does not belong to you."), frappe.PermissionError)
+
 		return file_doc.get_content(encodings=[])
 
 	# ------------------------------------------------------------------ parsing
@@ -45,8 +58,11 @@ class WalletStatementImport(Document):
 		password = password or self.get_password("file_password", raise_exception=False)
 
 		try:
-			grid, sheet_name = read_grid(
-				self.get_file_content(), file_name=self.statement_file, password=password
+			grid, _sheet = read_grid(
+				self.get_file_content(),
+				file_name=self.statement_file,
+				password=password,
+				sheet_name=self.get_format_value("sheet_name"),
 			)
 			result = self._stage_rows(grid)
 		except Exception as e:
@@ -61,14 +77,29 @@ class WalletStatementImport(Document):
 		self.save(ignore_permissions=True)
 		return result
 
+	def get_statement_format(self):
+		"""The format governing this import: the one chosen here, else the account's default."""
+		name = self.statement_format or frappe.db.get_value(
+			"Wallet Account", self.account, "default_statement_format"
+		)
+		return frappe.get_cached_doc("Wallet Statement Format", name) if name else None
+
+	def get_format_value(self, fieldname: str, default=None):
+		fmt = self.get_statement_format()
+		value = fmt.get(fieldname) if fmt else None
+		return default if value in (None, "") else value
+
 	def _resolve_layout(self, grid: list[list]) -> tuple[int, dict, str]:
 		"""Return (header_row, mapping, source) using the cheapest path available.
 
 		Order matters: an explicitly chosen format wins, then a remembered format matched
 		by header signature (the one-click repeat import), then the heuristic.
 		"""
-		if self.statement_format:
-			fmt = frappe.get_doc("Wallet Statement Format", self.statement_format)
+		fmt = self.get_statement_format()
+		if fmt:
+			# Adopt it onto the document so the rest of the pipeline and the UI agree on
+			# which format is in force, including when it came from the account default.
+			self.statement_format = fmt.name
 			header_row = fmt.header_row or detect.detect_header(grid)[0]
 			mapping = {
 				target: spec["index"] for target, spec in fmt.get_mapping().items() if spec["index"] is not None
@@ -110,7 +141,15 @@ class WalletStatementImport(Document):
 			header_row, mapping, source = self._resolve_layout(grid)
 
 		max_rows = get_setting("max_import_rows") or 5000
-		body = grid[header_row + 1 :]
+
+		# A format may pin where the data starts and how many trailing summary rows to
+		# drop; both default to "straight after the header, keep everything".
+		data_start = self.get_format_value("data_start_row") or (header_row + 1)
+		skip_footer = self.get_format_value("skip_footer_rows") or 0
+		body = grid[data_start:]
+		if skip_footer:
+			body = body[: len(body) - skip_footer]
+
 		if len(body) > max_rows:
 			frappe.throw(
 				_("This statement has {0} rows, more than the {1} row limit in Wallet Settings.").format(
@@ -119,9 +158,23 @@ class WalletStatementImport(Document):
 			)
 
 		date_column = mapping.get("posting_date", mapping.get("value_date"))
-		dayfirst = detect_dayfirst([row[date_column] for row in body if date_column < len(row)])
+		if date_column is None:
+			frappe.throw(_("The column mapping needs a date column."))
+
+		# A saved format states its own date convention; only guess when it does not.
+		fmt = self.get_statement_format()
+		if fmt and fmt.get("dayfirst") is not None and not mapping_override:
+			dayfirst = bool(fmt.dayfirst)
+		else:
+			dayfirst = detect_dayfirst([row[date_column] for row in body if date_column < len(row)])
 
 		self.header_row = header_row
+		# Remembering the header labels means "Save as Format" never has to re-read the
+		# file, which it could not do anyway once the password has been cleared.
+		if header_row is not None and 0 <= header_row < len(grid):
+			self.header_labels = json.dumps(
+				[str(cell) if cell is not None else "" for cell in grid[header_row]]
+			)
 		self.detected_mapping = json.dumps(mapping, indent=1, sort_keys=True)
 		self.set("rows", [])
 
@@ -130,16 +183,17 @@ class WalletStatementImport(Document):
 		opening_balance = closing_balance = None
 
 		for offset, raw_row in enumerate(body):
-			absolute_index = header_row + 1 + offset
+			absolute_index = data_start + offset
 
-			if detect.is_footer_row(raw_row):
+			parsed = self._parse_row(raw_row, mapping, dayfirst)
+
+			# Summary lines are recognised only *after* failing to parse as a transaction.
+			# Checking markers first meant a real dated payment to a merchant like
+			# "TotalEnergies" matched the generic marker "total" and was silently dropped.
+			if parsed is None:
 				opening_balance, closing_balance = self._capture_summary_balance(
 					raw_row, mapping, opening_balance, closing_balance
 				)
-				continue
-
-			parsed = self._parse_row(raw_row, mapping, dayfirst)
-			if parsed is None:
 				continue
 
 			if parsed.get("error"):
@@ -201,11 +255,16 @@ class WalletStatementImport(Document):
 		return opening, closing
 
 	def _parse_row(self, raw_row: list, mapping: dict, dayfirst: bool) -> dict | None:
+		fmt = self.get_statement_format()
+		transforms = (
+			{row.target_field: row.transform for row in fmt.mappings} if fmt else {}
+		)
+
 		def cell(target):
 			index = mapping.get(target)
-			if index is None or index >= len(raw_row):
+			if index is None or index < 0 or index >= len(raw_row):
 				return None
-			return raw_row[index]
+			return _apply_transform(raw_row[index], transforms.get(target))
 
 		posting_date = parse_date(cell("posting_date") or cell("value_date"), dayfirst=dayfirst)
 		if not posting_date:
@@ -264,17 +323,34 @@ class WalletStatementImport(Document):
 		"""
 		seen_in_file: set[str] = set()
 
+		# Occurrence ordinals for the weakest dedup tier (no reference number, no running
+		# balance) must count rows *within this file* as well as those already stored.
+		# Deriving them from a database count alone gave two identical rows in the same
+		# statement the same ordinal, the same hash, and silently dropped the second.
+		occurrences: dict[tuple, int] = {}
+
 		for row in staged:
 			if row["status"] == "Error":
 				continue
 
+			signed = flt(row["amount"]) if row["direction"] == "In" else -flt(row["amount"])
+			occurrence = None
+
+			if not row.get("reference_number") and row.get("balance_after") is None:
+				key = content_key(self.account, row["posting_date"], signed, row.get("description"))
+				if key not in occurrences:
+					occurrences[key] = occurrence_index(*key)
+				occurrence = occurrences[key]
+				occurrences[key] += 1
+
 			row["dedup_hash"] = build_dedup_hash(
 				account=self.account,
 				posting_date=row["posting_date"],
-				signed_amount=flt(row["amount"]) if row["direction"] == "In" else -flt(row["amount"]),
+				signed_amount=signed,
 				description=row.get("description"),
 				reference_number=row.get("reference_number"),
 				balance_after=row.get("balance_after"),
+				occurrence=occurrence,
 			)
 
 		hashes = [row["dedup_hash"] for row in staged if row.get("dedup_hash")]
@@ -305,6 +381,22 @@ class WalletStatementImport(Document):
 		self.status = "Importing"
 		self.save(ignore_permissions=True)
 
+		imported = failed = 0
+
+		# See WalletTransaction.refresh_account_balance: without this every inserted row
+		# triggers a full SUM over the account, making a 5,000 row import quadratic.
+		frappe.flags.wallet_bulk_import = True
+
+		try:
+			imported, failed = self._insert_rows()
+		finally:
+			# A leaked flag would silently stop balance refreshes for the rest of the request.
+			frappe.flags.wallet_bulk_import = False
+
+		refresh_cached_balance(self.account)
+		return self._finish_commit(imported, failed)
+
+	def _insert_rows(self) -> tuple[int, int]:
 		imported = failed = 0
 
 		for row in self.rows:
@@ -345,7 +437,13 @@ class WalletStatementImport(Document):
 				row.message = str(e)[:500]
 				failed += 1
 
-		self.imported_rows = imported
+		# Recompute from the child table rather than from this call's counter: on a retry
+		# of a partially completed import, `imported` holds only the rows this call
+		# created, and the document would report fewer than it actually contains.
+		return imported, failed
+
+	def _finish_commit(self, imported: int, failed: int) -> dict:
+		self.imported_rows = sum(1 for row in self.rows if row.status == "Imported")
 		self.error_rows = sum(1 for row in self.rows if row.status == "Error")
 		self.duplicate_rows = sum(1 for row in self.rows if row.status == "Duplicate")
 		self.new_rows = sum(1 for row in self.rows if row.status == "New")
@@ -414,6 +512,24 @@ def _last_running_balance(staged: list[dict]) -> float | None:
 		if row.get("balance_after") is not None:
 			return row["balance_after"]
 	return None
+
+
+def _apply_transform(value, transform: str | None):
+	"""Per-column cleanup a saved format asks for."""
+	if not transform or transform == "None" or value is None:
+		return value
+
+	if transform == "Strip":
+		return str(value).strip()
+	if transform == "Uppercase":
+		return str(value).strip().upper()
+	if transform == "Absolute":
+		from wallet.statement.parse import parse_amount
+
+		amount = parse_amount(value)
+		return abs(amount) if amount is not None else value
+
+	return value
 
 
 def _jsonable(value):

@@ -27,11 +27,18 @@ pass an explicit owner filter.
 import frappe
 from frappe.utils import flt, now, nowdate
 
+from wallet.settings import get_setting
+
 
 @frappe.whitelist()
 def get_account_balance(account: str, as_on: str | None = None) -> dict:
 	"""Balance of one account as on a date (default today)."""
 	as_on = as_on or nowdate()
+
+	# frappe.db.get_value bypasses the permission hooks, so without this an authenticated
+	# caller could read any account's opening balance and currency by guessing its name.
+	if not frappe.has_permission("Wallet Account", "read", doc=account):
+		raise frappe.PermissionError
 
 	opening = frappe.db.get_value(
 		"Wallet Account", account, ["opening_balance", "currency", "is_liability"], as_dict=True
@@ -65,6 +72,7 @@ def get_overview(as_on: str | None = None) -> dict:
 	`get_account_balance`.
 	"""
 	as_on = as_on or nowdate()
+	base_currency = get_setting("default_currency") or "INR"
 
 	accounts = frappe.get_list(
 		"Wallet Account",
@@ -95,26 +103,43 @@ def get_overview(as_on: str | None = None) -> dict:
 		)
 	}
 
-	assets = liabilities = 0.0
+	# Totals are kept per currency. Adding a rupee balance to a dollar balance produces a
+	# number that is wrong in every currency, so the sum is only ever taken within one.
+	by_currency: dict[str, dict] = {}
+
 	for account in accounts:
 		account["balance"] = flt(account.opening_balance) + movement_by_account.get(account.name, 0.0)
 
 		if not account.include_in_net_worth:
 			continue
 
+		bucket = by_currency.setdefault(
+			account.currency or base_currency, {"assets": 0.0, "liabilities": 0.0}
+		)
 		# The sign convention already does the work: a spent-on credit card is negative,
 		# so net worth is a plain sum. `is_liability` only flips the label in the UI.
 		if account["balance"] < 0:
-			liabilities += account["balance"]
+			bucket["liabilities"] += account["balance"]
 		else:
-			assets += account["balance"]
+			bucket["assets"] += account["balance"]
+
+	for currency, bucket in by_currency.items():
+		bucket["currency"] = currency
+		bucket["liabilities"] = abs(bucket["liabilities"])
+		bucket["net_worth"] = bucket["assets"] - bucket["liabilities"]
+
+	base = by_currency.get(base_currency, {"assets": 0.0, "liabilities": 0.0, "net_worth": 0.0})
 
 	return {
 		"as_on": as_on,
 		"accounts": accounts,
-		"assets": assets,
-		"liabilities": abs(liabilities),
-		"net_worth": assets + liabilities,
+		"currency": base_currency,
+		"assets": base["assets"],
+		"liabilities": base["liabilities"],
+		"net_worth": base["net_worth"],
+		"by_currency": sorted(by_currency.values(), key=lambda b: b["currency"] != base_currency),
+		# The headline figures cover `currency` only; the UI must say so when this is set.
+		"has_other_currencies": len(by_currency) > 1,
 	}
 
 

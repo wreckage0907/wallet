@@ -49,8 +49,14 @@ COLUMN_KEYWORDS: dict[str, tuple[str, ...]] = {
 HEADER_SCAN_ROWS = 30
 
 #: Text that marks a summary or footer row rather than a transaction.
+#:
+#: Deliberately specific. A generic "total" matched any narration containing that
+#: substring - a fuel payment to "TotalEnergies", for instance - and because footer
+#: detection used to run before parsing, those real transactions were silently dropped.
+#: Detection is now date-gated (a row that parses as a dated transaction is never treated
+#: as a footer), but keeping the markers narrow avoids relying on that alone.
 FOOTER_MARKERS = (
-	"opening balance", "closing balance", "statement summary", "total", "grand total",
+	"opening balance", "closing balance", "statement summary", "grand total",
 	"legends", "computer generated", "end of statement", "brought forward",
 	"carried forward",
 )

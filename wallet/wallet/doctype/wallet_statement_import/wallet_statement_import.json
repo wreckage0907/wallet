@@ -32,6 +32,7 @@
   "system_section",
   "detected_mapping",
   "header_row",
+  "header_labels",
   "error_log"
  ],
  "fields": [
@@ -194,6 +195,14 @@
    "fieldname": "header_row",
    "fieldtype": "Int",
    "label": "Header Row",
+   "read_only": 1
+  },
+  {
+   "description": "The header row as read from the file. Kept so 'Save as Format' never has to re-open the statement, which it could not do anyway once the password has been cleared.",
+   "fieldname": "header_labels",
+   "fieldtype": "Code",
+   "label": "Header Labels",
+   "options": "JSON",
    "read_only": 1
   },
   {

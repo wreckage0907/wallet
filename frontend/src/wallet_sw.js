@@ -1,7 +1,6 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { NetworkFirst } from "workbox-strategies";
 
 // Precache the built shell. self.__WB_MANIFEST is replaced at build time.
 precacheAndRoute(self.__WB_MANIFEST);
@@ -28,17 +27,14 @@ registerRoute(
 	)
 );
 
-// Read-only Wallet endpoints may be served stale when the network is down. Only GETs:
-// caching a POST would silently swallow a write.
-registerRoute(
-	({ url, request }) =>
-		request.method === "GET" && url.pathname.startsWith("/api/method/wallet."),
-	new NetworkFirst({
-		cacheName: "wallet-api",
-		networkTimeoutSeconds: 5,
-		plugins: [],
-	})
-);
+// API responses are deliberately NOT cached.
+//
+// Cache Storage is scoped to the origin, not to the session: it survives logout and is
+// shared by whoever uses the browser next. Caching balances and transactions would mean
+// a second user on the same device could be served the first user's financial data from
+// cache the moment the network hiccuped. Offline support here would need per-user cache
+// names purged on authentication change, which is not worth the risk for read-only data
+// that is meaningless when stale.
 
 self.addEventListener("message", (event) => {
 	if (event.data?.type === "SKIP_WAITING") self.skipWaiting();

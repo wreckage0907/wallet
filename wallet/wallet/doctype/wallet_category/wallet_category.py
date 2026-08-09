@@ -28,8 +28,20 @@ class WalletCategory(NestedSet):
 			return
 
 		parent = frappe.db.get_value(
-			"Wallet Category", self.parent_wallet_category, ["is_group", "category_type"], as_dict=True
+			"Wallet Category",
+			self.parent_wallet_category,
+			["is_group", "category_type", "owner"],
+			as_dict=True,
 		)
+		if not parent:
+			frappe.throw(_("Parent category not found."))
+
+		# The parent Link carries ignore_user_permissions, and this lookup bypasses the
+		# permission hooks, so without an explicit owner check a crafted request could
+		# graft a category onto another user's tree - which then rewrites their lft/rgt.
+		if parent.owner != self.owner and frappe.session.user != "Administrator":
+			frappe.throw(_("That parent category belongs to someone else."), frappe.PermissionError)
+
 		if not parent.is_group:
 			frappe.throw(_("Parent category must be a group."))
 		if parent.category_type != self.category_type:

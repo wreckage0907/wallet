@@ -45,6 +45,19 @@ export default function Dashboard() {
 						</span>
 					)}
 				</div>
+				{overview?.has_other_currencies && (
+					// Balances in other currencies are deliberately not folded in: converting
+					// them would need a rate we do not have, and adding them raw would produce
+					// a number that is wrong in every currency.
+					<p className="mt-3 text-xs" style={{ color: "var(--text-muted)" }}>
+						{overview.currency} accounts only.{" "}
+						{overview.by_currency
+							.filter((b) => b.currency !== overview.currency)
+							.map((b) => `${b.currency} ${b.net_worth.toLocaleString("en-IN")}`)
+							.join(", ")}{" "}
+						held separately.
+					</p>
+				)}
 			</Card>
 
 			<div className="grid grid-cols-2 gap-3">

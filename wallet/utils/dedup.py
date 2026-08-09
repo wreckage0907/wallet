@@ -21,11 +21,19 @@ statement carries a running balance column, and the running balance differs betw
 those two rows - so it separates them for free, with no counting and no dependence on
 row order, and stays stable across re-imports and deletions.
 
-KNOWN LIMITATION: for banks that provide neither a reference number nor a running
-balance we fall back to counting existing identical rows (`occurrence_index`). That
-index is not stable under deletion - if you delete one of a duplicate pair and re-import,
-the survivor's index no longer matches and the row is treated as new. This is the least
-bad option available without extra information from the statement.
+For banks that provide neither a reference number nor a running balance we fall back to
+an occurrence ordinal. Two things make that ordinal usable:
+
+* the caller passes it explicitly, so an importer can count occurrences *within the file
+  it is staging*. Deriving it purely from a database count would give two identical rows
+  in the same statement the same ordinal, the same hash, and silently drop the second.
+* Wallet Transaction stamps `dedup_hash` once, on insert, and never recomputes it. If the
+  hash were recomputed on every save, editing the first of two identical rows would
+  re-derive an ordinal that now collides with the second.
+
+It remains the weakest tier: delete one of a duplicate pair and re-import, and the
+ordinal no longer lines up. There is nothing better available when the statement carries
+neither a reference number nor a running balance.
 """
 
 import hashlib
@@ -55,6 +63,16 @@ def _digest(*parts: str) -> str:
 	return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()
 
 
+def content_key(account: str, posting_date, signed_amount: float, description: str | None) -> tuple:
+	"""The part of the fingerprint that is pure content, before any discriminator."""
+	return (
+		account,
+		getdate(posting_date).strftime("%Y-%m-%d"),
+		f"{flt(signed_amount):.2f}",
+		normalize(description),
+	)
+
+
 def build_dedup_hash(
 	account: str,
 	posting_date,
@@ -63,24 +81,30 @@ def build_dedup_hash(
 	reference_number: str | None = None,
 	balance_after: float | None = None,
 	exclude: str | None = None,
+	occurrence: int | None = None,
 ) -> str:
-	"""Fingerprint one transaction. See the module docstring for the tiering rationale."""
+	"""Fingerprint one transaction. See the module docstring for the tiering rationale.
+
+	`occurrence` lets a batch importer supply its own ordinal so that repeated identical
+	rows inside one statement stay distinct. When omitted it is derived from the database,
+	which is correct only for a single transaction added on its own.
+	"""
 	if reference_number and normalize(reference_number):
 		return _digest(account, "ref", normalize(reference_number))
 
-	date_key = getdate(posting_date).strftime("%Y-%m-%d")
-	amount_key = f"{flt(signed_amount):.2f}"
-	description_key = normalize(description)
+	key = content_key(account, posting_date, signed_amount, description)
 
 	if balance_after not in (None, ""):
 		discriminator = f"bal:{flt(balance_after):.2f}"
 	else:
-		discriminator = f"occ:{_occurrence_index(account, date_key, amount_key, description_key, exclude)}"
+		if occurrence is None:
+			occurrence = occurrence_index(*key, exclude=exclude)
+		discriminator = f"occ:{occurrence}"
 
-	return _digest(account, date_key, amount_key, description_key, discriminator)
+	return _digest(*key, discriminator)
 
 
-def _occurrence_index(
+def occurrence_index(
 	account: str,
 	date_key: str,
 	amount_key: str,

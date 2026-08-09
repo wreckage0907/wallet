@@ -60,7 +60,24 @@ def _read_xls(content: bytes, sheet_name: str | None = None) -> tuple[list[list]
 
 	book = xlrd.open_workbook(file_contents=content)
 	sheet = book.sheet_by_name(sheet_name) if sheet_name else book.sheet_by_index(0)
-	grid = [sheet.row_values(i) for i in range(sheet.nrows)]
+
+	# row_values() hands back date cells as raw Excel serial floats, so a legacy .xls
+	# whose dates are real date-typed cells would stage zero transactions - every row
+	# would look undated. Convert them using the workbook's epoch.
+	grid = []
+	for r in range(sheet.nrows):
+		row = []
+		for c in range(sheet.ncols):
+			cell = sheet.cell(r, c)
+			if cell.ctype == xlrd.XL_CELL_DATE:
+				try:
+					row.append(xlrd.xldate.xldate_as_datetime(cell.value, book.datemode))
+					continue
+				except (ValueError, OverflowError):
+					pass
+			row.append(cell.value)
+		grid.append(row)
+
 	return grid, sheet.name
 
 

@@ -25,8 +25,20 @@ class WalletAccount(Document):
 			frappe.throw(_("You already have an account named {0}.").format(frappe.bold(self.account_name)))
 
 	def validate_masked_number(self) -> None:
-		if self.masked_account_number and len(self.masked_account_number) > 8:
-			frappe.throw(_("Store only the last four digits of the account number."))
+		"""Count digits, not characters.
+
+		A length check let an unmasked eight-digit account number through while the field
+		promises only the last four are kept. Masking characters are still welcome, so
+		"****1234" passes and "12345678" does not.
+		"""
+		if not self.masked_account_number:
+			return
+
+		digits = sum(1 for ch in self.masked_account_number if ch.isdigit())
+		if digits > 4:
+			frappe.throw(
+				_("Store only the last four digits of the account number (masking characters are fine).")
+			)
 
 	def on_update(self) -> None:
 		self.refresh_cached_balance()
