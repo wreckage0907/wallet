@@ -35,7 +35,18 @@ break the bench. Install it without its dependencies instead:
 bench restart
 ```
 
-Verify with `./env/bin/frappe-mcp check --app wallet`.
+Verify by listing the tools (any authenticated user):
+
+```bash
+curl -s -X POST -H "Authorization: token <api_key>:<api_secret>" \
+	-H "Content-Type: application/json" \
+	-d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
+	https://<your-site>/api/method/wallet.mcp.read.handle_mcp
+```
+
+Note that `frappe-mcp check` reports these handlers as "not properly registered". That is
+expected: it looks for the `@mcp.register()` decorator, which this app deliberately does
+not use — see `wallet/mcp/endpoint.py`.
 
 Requires a Frappe version with the OAuth2 metadata endpoints
 ([frappe#33188](https://github.com/frappe/frappe/pull/33188)) — v16 or later. No other

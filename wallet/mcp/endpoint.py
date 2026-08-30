@@ -17,6 +17,10 @@ a function defined in *our* module keeps `__module__` inside `wallet`, so hook r
 finds `wallet.hooks` and works. Returning a `werkzeug.Response` from a whitelisted method
 is supported by `frappe.handler.handle`.
 
+The trade-off: `frappe-mcp check` discovers handlers by looking for `@mcp.register()`, so
+it reports ours as "not properly registered". That is cosmetic - the endpoints work - but
+it means the CLI is not a useful verification step for this app. A `tools/list` call is.
+
 Upstream issue to file; drop this shim if `frappe-mcp` starts preserving the wrapped
 function's module.
 """
