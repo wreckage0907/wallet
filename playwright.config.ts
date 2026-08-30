@@ -33,6 +33,17 @@ export default defineConfig({
 
 	use: {
 		baseURL: process.env.BASE_URL || 'http://wallet.test:8000',
+		// The browser and the site have to agree on what "today" is. Frappe derives
+		// `nowdate()` from System Settings, which only the setup wizard ever fills in - a
+		// site built by CI never runs it and falls through to `get_system_timezone()`'s
+		// hard-coded "Asia/Kolkata", while the runner itself is UTC. Left alone, every
+		// date the seeder writes is 5.5 hours out of step with the browser reading it, and
+		// the "Today" grouping breaks outright between 18:30 and 00:00 UTC.
+		//
+		// Undefined means "use this machine's zone", which is right for a developer whose
+		// laptop and site already agree. CI derives the value from the running site.
+		// auth.setup.ts fails loudly if the two ever disagree.
+		timezoneId: process.env.WALLET_E2E_TZ,
 		trace: 'on-first-retry',
 		video: 'retain-on-failure',
 		screenshot: 'only-on-failure',

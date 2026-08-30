@@ -130,6 +130,13 @@ BASE_URL=http://<site>:8000 yarn test:e2e          # headless
 BASE_URL=http://<site>:8000 yarn test:e2e:ui       # pick and watch individual specs
 ```
 
+The browser and the site have to sit at the same UTC offset — the seeder writes dates in
+site time and the specs read them back through the browser's clock. Frappe takes that
+timezone from System Settings, which only the setup wizard ever fills in, so a site that
+never ran it falls back to `Asia/Kolkata`. If your machine is elsewhere, export
+`WALLET_E2E_TZ=<the site's zone>`; `auth.setup.ts` fails with the exact value to use. CI
+derives it from the running site.
+
 The suite never logs in as Administrator. `wallet/permissions.py` exempts Administrator
 from owner isolation, so a session holding it would pass every isolation assertion no
 matter how broken the query conditions were. `wallet/tests/e2e_seed.py` therefore creates

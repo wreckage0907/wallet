@@ -149,6 +149,18 @@ jobs:
           timeout 60 bash -c 'until curl -s http://wallet.test:8000 > /dev/null; do sleep 2; done'
           echo "Frappe server is ready!"
 
+      - name: Match the browser timezone to the site
+        # Frappe reads `nowdate()` from System Settings, which only the setup wizard
+        # fills in - a CI site never runs it and falls back to `get_system_timezone()`'s
+        # hard-coded "Asia/Kolkata", while the runner is UTC. Every seeded date would
+        # then be 5.5 hours out of step with the browser reading it. Derived from the
+        # live site rather than hard-coded, so it stays correct if that default changes.
+        run: |
+          TZ_NAME=$(curl -s http://wallet.test:8000/api/method/frappe.client.get_time_zone \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['message']['time_zone'])")
+          echo "Site timezone: $TZ_NAME"
+          echo "WALLET_E2E_TZ=$TZ_NAME" >> $GITHUB_ENV
+
       - name: Install Playwright
         run: |
           yarn install --frozen-lockfile
