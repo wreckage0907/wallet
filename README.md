@@ -1,14 +1,5 @@
 <p align="center">
-  <img src="docs/images/pwa-dashboard.png" width="300" alt="Wallet dashboard showing net worth, monthly cashflow and account balances">
-</p>
-
-<h1 align="center"><samp>Wallet : Your Bank Statements, Finally Readable</samp></h1>
-
-<p align="center">
-  <samp>
-    Personal finance for Frappe. Add your bank accounts, drop in the statement files your bank emails you,<br>
-    and Wallet parses, de-duplicates and categorizes every row &mdash; then shows you where the money went, on your phone.
-  </samp>
+  <img src="docs/images/banner.png" alt="Wallet — your bank statements, parsed, deduplicated, finally readable">
 </p>
 
 <p align="center">
@@ -17,6 +8,13 @@
   <img alt="PWA" src="https://img.shields.io/badge/PWA-installable-5a0fc8?style=flat-square">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-server-000000?style=flat-square">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green?style=flat-square">
+</p>
+
+<p align="center">
+  <samp>
+    Personal finance for Frappe. Add your bank accounts, drop in the statement files your bank emails you,<br>
+    and Wallet parses, de-duplicates and categorizes every row &mdash; then shows you where the money went, on your phone.
+  </samp>
 </p>
 
 <samp>
@@ -30,36 +28,42 @@
 
 # ✨ Features
 
-<table align="center">
+<table>
   <tr>
-    <td width="50%" valign="top">
-      <h3 align="center">Statement import that survives real bank files</h3>
-      <samp>Point it at the xlsx your bank emailed you &mdash; encrypted, with three rows of branch details above the table and a totals row below. Wallet finds the transaction table, works out which column is which, and stages every row for review before a single transaction is written.</samp>
-    </td>
-    <td width="50%" valign="top">
-      <h3 align="center">De-duplication across overlapping statements</h3>
-      <samp>Statements overlap month to month. Wallet fingerprints each transaction from its own content &mdash; reference number, or date + amount + narration disambiguated by the running balance &mdash; so re-importing an overlapping period is a no-op.</samp>
-    </td>
+    <td width="50%" valign="top"><samp>
+      <b>Statement import that survives real bank files</b>
+      <br><br>
+      Point it at the xlsx your bank emailed you &mdash; encrypted, with three rows of branch details above the table and a totals row below. Wallet finds the transaction table, works out which column is which, and stages every row for review before a single transaction is written.
+    </samp></td>
+    <td width="50%" valign="top"><samp>
+      <b>De-duplication across overlapping statements</b>
+      <br><br>
+      Statements overlap month to month. Wallet fingerprints each transaction from its own content &mdash; reference number, or date + amount + narration disambiguated by the running balance &mdash; so re-importing an overlapping period is a no-op.
+    </samp></td>
   </tr>
   <tr>
-    <td width="50%" valign="top">
-      <h3 align="center">Auto-categorization from your own rules</h3>
-      <samp>Ships with ~20 rules tuned for Indian bank narrations and a two-level category tree. Rules match on description, counterparty or reference &mdash; by substring, prefix, exact match or regex &mdash; filtered by direction, account and amount range.</samp>
-    </td>
-    <td width="50%" valign="top">
-      <h3 align="center">Balances that cannot drift</h3>
-      <samp>A balance is always recomputed as <code>opening_balance + SUM(signed_amount)</code>, never incremented into a stored counter. Multi-currency accounts are totalled per currency and never silently added together.</samp>
-    </td>
+    <td width="50%" valign="top"><samp>
+      <b>Auto-categorization from your own rules</b>
+      <br><br>
+      Ships with ~20 rules tuned for Indian bank narrations and a two-level category tree. Rules match on description, counterparty or reference &mdash; by substring, prefix, exact match or regex &mdash; filtered by direction, account and amount range.
+    </samp></td>
+    <td width="50%" valign="top"><samp>
+      <b>Balances that cannot drift</b>
+      <br><br>
+      A balance is always recomputed as <code>opening_balance + SUM(signed_amount)</code>, never incremented into a stored counter. Multi-currency accounts are totalled per currency and never silently added together.
+    </samp></td>
   </tr>
   <tr>
-    <td width="50%" valign="top">
-      <h3 align="center">A reconciliation number you can trust</h3>
-      <samp>After an import, Wallet compares its computed closing balance against the one the statement itself states. A single number that checks parsing, sign convention and de-duplication all at once.</samp>
-    </td>
-    <td width="50%" valign="top">
-      <h3 align="center">An MCP server, with writes off by default</h3>
-      <samp>Ask your AI assistant what you spent on groceries last month, or have it record a cash payment. Five tools, one endpoint, and a write gate that lives inside the tool rather than in the URL.</samp>
-    </td>
+    <td width="50%" valign="top"><samp>
+      <b>A reconciliation number you can trust</b>
+      <br><br>
+      After an import, Wallet compares its computed closing balance against the one the statement itself states. A single number that checks parsing, sign convention and de-duplication all at once.
+    </samp></td>
+    <td width="50%" valign="top"><samp>
+      <b>An MCP server, with writes off by default</b>
+      <br><br>
+      Ask your AI assistant what you spent on groceries last month, or have it record a cash payment. Five tools, one endpoint, and a write gate that lives inside the tool rather than in the URL.
+    </samp></td>
   </tr>
 </table>
 
@@ -67,51 +71,55 @@
 
 # 📱 Preview
 
-<table align="center">
+<table>
   <tr>
-    <td width="33%" align="center" valign="top">
-      <h3 align="center">Everything in one number</h3>
-      <samp>Net worth, this month's money in and out, and every account balance &mdash; computed in two queries, not one per account.</samp>
+    <td width="33%"><img src="docs/images/pwa-dashboard.png" alt="Dashboard with net worth, monthly cashflow and account list"></td>
+    <td width="33%"><img src="docs/images/pwa-accounts.png" alt="Account list with balances and a combined total"></td>
+    <td width="33%"><img src="docs/images/pwa-transactions.png" alt="Transactions grouped by day with direction filters"></td>
+  </tr>
+  <tr>
+    <td width="33%" align="center" valign="top"><samp>
+      <b>Everything in one number</b>
       <br><br>
-      <img src="docs/images/pwa-dashboard.png" alt="Dashboard with net worth, monthly cashflow and account list">
-    </td>
-    <td width="33%" align="center" valign="top">
-      <h3 align="center">Accounts, and what they really hold</h3>
-      <samp>Savings, cards, cash and loans together. A spent-on credit card shows as a negative balance, so the combined total is a plain sum.</samp>
+      Net worth, this month's money in and out, and every account balance &mdash; computed in two queries, not one per account.
+    </samp></td>
+    <td width="33%" align="center" valign="top"><samp>
+      <b>Accounts, and what they really hold</b>
       <br><br>
-      <img src="docs/images/pwa-accounts.png" alt="Account list with balances and a combined total">
-    </td>
-    <td width="33%" align="center" valign="top">
-      <h3 align="center">Activity that reads like a diary</h3>
-      <samp>Transactions grouped by day rather than an undifferentiated wall, filterable to just what you spent or just what came in.</samp>
+      Savings, cards, cash and loans together. A spent-on credit card shows as a negative balance, so the combined total is a plain sum.
+    </samp></td>
+    <td width="33%" align="center" valign="top"><samp>
+      <b>Activity that reads like a diary</b>
       <br><br>
-      <img src="docs/images/pwa-transactions.png" alt="Transactions grouped by day with direction filters">
-    </td>
+      Transactions grouped by day rather than an undifferentiated wall, filterable to just what you spent or just what came in.
+    </samp></td>
   </tr>
 </table>
 
-<samp>Wallet has two faces. The PWA at <code>/wallet</code> is for looking &mdash; mobile-first, installable, works offline. The Frappe desk at <code>/app/wallet</code> is for the heavier work.</samp>
+<samp>Wallet has two faces. The PWA at <code>/wallet</code> is for looking &mdash; mobile-first, installable, works offline. The Frappe desk at <code>/desk/wallet</code> is for the heavier work: creating accounts, running imports, editing categorization rules.</samp>
 
 <p align="center">
-  <img src="docs/images/desk-workspace.png" width="90%" alt="Wallet desk workspace with shortcuts to accounts, transactions, imports and categories">
+  <img src="docs/images/desk-workspace.png" width="92%" alt="Wallet desk workspace with shortcuts to accounts, transactions, imports and categories">
 </p>
 
-<samp>The reconciliation block is the thing to look at after an import &mdash; Wallet's computed closing balance against the one the statement states.</samp>
+<samp>After an import, the reconciliation block compares Wallet's computed closing balance against the one the statement states.</samp>
 
-<table align="center">
+<table>
   <tr>
-    <td width="50%" align="center" valign="top">
-      <h3 align="center">✅ Reconciled</h3>
-      <samp>Variance is zero. Every row parsed, signed and de-duplicated correctly.</samp>
+    <td width="50%"><img src="docs/images/desk-import.png" alt="A completed import with a zero variance and a green reconciled banner"></td>
+    <td width="50%"><img src="docs/images/desk-import-variance.png" alt="A completed import of 1500 rows reporting a variance of minus 300 rupees"></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top"><samp>
+      <b>✅ Reconciled</b>
       <br><br>
-      <img src="docs/images/desk-import.png" alt="A completed import with a zero variance and a green reconciled banner">
-    </td>
-    <td width="50%" align="center" valign="top">
-      <h3 align="center">⚠️ Off by ₹300</h3>
-      <samp>1,500 rows imported and it still says so, instead of letting a mis-parsed row pass quietly.</samp>
+      Variance is zero. Every row parsed, signed and de-duplicated correctly.
+    </samp></td>
+    <td width="50%" align="center" valign="top"><samp>
+      <b>⚠️ Off by ₹300</b>
       <br><br>
-      <img src="docs/images/desk-import-variance.png" alt="A completed import of 1500 rows reporting a variance of minus 300 rupees">
-    </td>
+      1,500 rows imported and it still says so, instead of letting a mis-parsed row pass quietly.
+    </samp></td>
   </tr>
 </table>
 
@@ -121,11 +129,11 @@
 
 <table>
 <tr>
-<td width="48.5%" valign="top">
+<td width="50%" valign="top">
 
 <samp>
 
-## 📝 Prerequisites
+**📝 Prerequisites**
 
 1. **Frappe Bench** with a **v16** site
 2. **Python 3.11+**
@@ -135,49 +143,43 @@
 
 <br>
 
-## 🔮 Optional
+**🔮 Optional**
 
-- **`frappe-mcp`** — only for the MCP server, installed by hand (see **MCP server** below)
-- **`developer_mode`** — only for MCP client self-registration
+- `frappe-mcp` — only for the MCP server, installed by hand
+- `developer_mode` — only for MCP client self-registration
 
 </samp>
 
 </td>
-<td width="48.5%" valign="top">
+<td width="50%" valign="top">
 
 <samp>
 
-## 🪴 Usage
+**🪴 Usage**
 
-#### 1. Install the app:
+1. Install the app:
 
-    bench get-app https://github.com/wreckage0907/wallet --branch main
-    bench install-app wallet
+       bench get-app https://github.com/wreckage0907/wallet --branch main
+       bench install-app wallet
 
-#### 2. Build the frontend (not committed):
+2. Build the frontend (not committed):
 
-    cd apps/wallet/frontend
-    yarn install
-    yarn build
+       cd apps/wallet/frontend
+       yarn install
+       yarn build
 
-#### 3. Assign the role
+3. Assign the **Wallet User** role — install creates it but does not assign it.
 
-<samp>Install creates a **Wallet User** role but does not assign it. Give it to anyone who should keep their own accounts; `System Manager` works too.</samp>
+4. Open it:
 
-#### 4. Open it:
-
-    /wallet        the PWA
-    /app/wallet    the desk workspace
+       /wallet        the PWA
+       /desk/wallet   the desk workspace
 
 </samp>
 
 </td>
 </tr>
 </table>
-
-> [!IMPORTANT]
-> Step 2 is not optional. Build output is gitignored, so a fresh clone that skips `yarn build`
-> gets a 404 for the PWA **and** for the app icon on the `/apps` screen.
 
 <br>
 
@@ -203,7 +205,7 @@
 # 🧠 How it works
 
 <details>
-<summary><h3>📦 Data model</h3></summary>
+<summary><b>📦 Data model</b></summary>
 <br>
 <samp>
 
@@ -225,7 +227,7 @@ Account and category names are unique **per user**, not globally — both doctyp
 </details>
 
 <details>
-<summary><h3>🔒 Data isolation</h3></summary>
+<summary><b>🔒 Data isolation</b></summary>
 <br>
 <samp>
 
@@ -245,16 +247,10 @@ mix in other people's transactions. Only `Administrator` is exempt, purely as th
 break-glass account for recovery.
 
 </samp>
-
-> ### ⚠️ Warning
-> `frappe.get_all` and `frappe.qb` bypass `permission_query_conditions` entirely. Any aggregate
-> must use `frappe.get_list` or carry an explicit `owner` filter. This is the single most likely
-> security bug in this app — see **Known gaps** below for one that is currently live.
-
 </details>
 
 <details>
-<summary><h3>📄 The import pipeline</h3></summary>
+<summary><b>📄 The import pipeline</b></summary>
 <br>
 <samp>
 
@@ -281,7 +277,7 @@ preview is that you can edit it before committing.
 </details>
 
 <details>
-<summary><h3>🔁 De-duplication</h3></summary>
+<summary><b>🔁 De-duplication</b></summary>
 <br>
 <samp>
 
@@ -293,8 +289,7 @@ Three tiers, in order:
    collide; their running balances differ, which separates them for free with no dependence
    on row order and no sensitivity to re-imports or deletions.
 3. **An occurrence ordinal**, when the bank supplies neither. The weakest tier: delete one of
-   a duplicate pair and re-import, and the ordinal no longer lines up. There is nothing better
-   available when a statement carries neither a reference number nor a balance column.
+   a duplicate pair and re-import, and the ordinal no longer lines up.
 
 Fingerprints are stamped once, on insert, and never recomputed — so correcting a transaction
 later never changes which statement row it came from.
@@ -326,25 +321,28 @@ your accounts and transactions and record new ones.
 | `get_spending_summary` | money in, money out and spend per category over a period | 🔍 read |
 | `add_transaction` | record one transaction | ✍️ write |
 
-**One endpoint, not one per access level.** Splitting reads and writes across two URLs looks
-like a boundary and is not one: a Frappe OAuth bearer token is session-wide, so a token issued
-for a "read-only" URL can POST to the write URL just as easily. Instead, **writes are off by
-default** and enabled with `Allow MCP Writes` in Wallet Settings — checked inside the tool
-body, so it holds however the endpoint is reached.
+One endpoint, not one per access level. **Writes are off by default** and enabled with
+`Allow MCP Writes` in Wallet Settings — checked inside the tool body, so it holds however
+the endpoint is reached.
 
-That setting is a site-wide Single, not a per-user opt-in: on a multi-user site, turning it on
-opens the write path for every connected agent, each still confined to its own owner's records.
+Point your MCP client at the endpoint URL; it registers itself, opens your normal Frappe
+login, and receives a token once you approve. There is no API key to copy.
+
+```bash
+claude mcp add --transport http wallet \
+	https://<your-site>/api/method/wallet.mcp.handle_mcp
+```
 
 </samp>
 
 <details>
-<summary><h3>⚙️ Setup</h3></summary>
+<summary><b>⚙️ Setup</b></summary>
 <br>
 <samp>
 
-`frappe-mcp` is **not** in `pyproject.toml`: it pins `Werkzeug==3.1.3` and `pydantic~=2.11.7`,
-while Frappe pins newer versions of both, so a normal resolve would downgrade Werkzeug and
-break the bench. Install it without its dependencies instead:
+`frappe-mcp` is not in `pyproject.toml`: it pins `Werkzeug==3.1.3` and `pydantic~=2.11.7`
+against Frappe's newer pins, so a normal resolve would downgrade Werkzeug and break the
+bench. Install it without its dependencies instead:
 
 ```bash
 ./env/bin/pip install jsonschema
@@ -355,14 +353,8 @@ bench restart
 
 The commit is pinned deliberately — the library ships breaking changes without notice.
 
-This install lives only in the bench virtualenv, and nothing in the repo restores it. A
-container or image rebuild, a fresh `bench init`, or a Frappe Cloud deploy will not have it,
-and the endpoint will fail with `No module named 'frappe_mcp'`. Re-run the two commands above.
-The rest of the app is unaffected — nothing else imports `frappe_mcp`.
-
-Requires a Frappe version with the OAuth2 metadata endpoints
-([frappe#33188](https://github.com/frappe/frappe/pull/33188)) — v16 or later. Nothing else
-needs configuring: `OAuth Settings` enables dynamic client registration and the `.well-known`
+Requires Frappe v16 or later, for the OAuth2 metadata endpoints. Nothing else needs
+configuring: `OAuth Settings` enables dynamic client registration and the `.well-known`
 metadata endpoints by default.
 
 Verify by listing the tools, as a user with the `Wallet User` or `System Manager` role:
@@ -374,129 +366,21 @@ curl -s -X POST -H "Authorization: token <api_key>:<api_secret>" \
 	https://<your-site>/api/method/wallet.mcp.handle_mcp
 ```
 
-`frappe-mcp check` reports this handler as "not properly registered". That is expected: it
-looks for the `@mcp.register()` decorator, which this app deliberately does not use — see
-`wallet/mcp/__init__.py` for why it breaks Frappe's app resolution.
+`frappe-mcp check` reports this handler as "not properly registered". That is expected — it
+looks for the `@mcp.register()` decorator, which this app deliberately does not use. See
+`wallet/mcp/__init__.py`.
 
 </samp>
 </details>
-
-<details>
-<summary><h3>🔌 Connecting a client</h3></summary>
-<br>
-<samp>
-
-There is no API key to copy. Paste the endpoint URL into your MCP client; it registers itself,
-opens your normal Frappe login, and receives a token once you approve.
-
-```bash
-claude mcp add --transport http wallet \
-	https://<your-site>/api/method/wallet.mcp.handle_mcp
-```
-
-</samp>
-
-> ### ⚠️ Warning
-> Dynamic client registration requires **every** `redirect_uri` to be `https`, unless the site
-> runs with `developer_mode` on. There is no loopback exemption. MCP clients register loopback
-> redirects like `http://localhost:<port>/callback`, so on a production site the
-> self-registration flow fails with `redirect_uris must be https`. Either register an OAuth
-> Client by hand, or keep `developer_mode` on. This is a `developer_mode` distinction, not a
-> local-versus-remote one.
-
-<samp>Browser-based clients such as the MCP Inspector additionally need their origin listed in `OAuth Settings → Allowed Public Client Origins`, which is empty by default. Native clients (Claude Code, Claude Desktop) do not.</samp>
-
-> ### ❗ Important
-> A Frappe OAuth bearer token is session-wide, not endpoint-scoped. A token issued for Wallet
-> can reach any whitelisted method on the site as you. `Allow MCP Writes` closes the Wallet
-> write path specifically; it does not contain a client you do not trust.
->
-> Connecting as **Administrator** bypasses the owner-based isolation the tools rely on, so
-> every answer would silently aggregate all users' data. **Connect as your own user.**
-
-</details>
-
-<br>
-
-# 🧪 Development
-
-<table>
-<tr>
-<td width="48.5%" valign="top">
-
-<samp>
-
-## Frontend
-
-    cd apps/wallet/frontend
-    yarn install
-    yarn dev      # Vite on :8080, proxied to bench
-    yarn build    # → wallet/public/frontend/
-
-Build output is gitignored, so a fresh clone always needs `yarn build`.
-
-</samp>
-
-</td>
-<td width="48.5%" valign="top">
-
-<samp>
-
-## Backend
-
-    bench --site <site> run-tests --app wallet
-
-    cd apps/wallet
-    pre-commit install
-
-Pre-commit runs `ruff`, `eslint`, `prettier` and `pyupgrade`.
-
-</samp>
-
-</td>
-</tr>
-</table>
-
-> [!CAUTION]
-> `.gitignore` blocks `*.xlsx`, `*.xls`, `*.csv` and `*.pdf`. Real bank statements are the
-> natural test fixture and must never be committed.
-
-<br>
-
-# ⚠️ Known gaps
-
-<samp>
-
-**The desk tree view for `Wallet Category` leaks other users' category names.**
-Frappe's `frappe.desk.treeview._get_children` builds a raw `frappe.qb` query, and `frappe.qb`
-bypasses `permission_query_conditions` — the exact failure mode `wallet/permissions.py` warns
-about. Opening one of those documents is still correctly refused with a `PermissionError`, so
-this is name enumeration, not a record read, and it affects only `Wallet Category` (the app's
-only tree doctype). The fix is a `wallet_category_tree.js` pointing
-`frappe.treeview_settings` at an owner-filtered `get_tree_nodes`.
-
-**The PWA is read-only.** Adding and editing happen in the desk at `/app/wallet` — the one
-context the desk is worst at.
-
-**Test coverage is MCP-only.** 29 tests, all in `wallet/tests/test_mcp_tools.py`. The statement
-parser, header detection, de-duplication and the balance engine have none — and `parse.py` and
-`detect.py` are pure functions over plain data, the cheapest possible things to cover.
-
-**`Wallet Budget` does not exist.** It is referenced in `permissions.py` and `hooks.py`, so
-permission hooks are registered for a doctype that was never built.
-
-**`pyproject.toml` declares `requires-python = ">=3.14"`**, which is ahead of what most benches
-run — a plain `pip install -e .` would refuse.
-
-**The MCP install is not reproducible.** `frappe-mcp` lives only in the bench virtualenv and
-nothing in the repo restores it.
-
-</samp>
 
 <br>
 
 <hr>
 
 <p align="center">
-  <samp>MIT &middot; built on <a href="https://frappeframework.com">Frappe</a></samp>
+  <samp>
+    Working notes, open findings and security boundaries live in <a href="specs/"><code>specs/</code></a>.
+    <br><br>
+    MIT &middot; built on <a href="https://frappeframework.com">Frappe</a>
+  </samp>
 </p>
