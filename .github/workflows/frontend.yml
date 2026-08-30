@@ -1,0 +1,70 @@
+name: Frontend
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-wallet-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    name: Lint & Build PWA
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          check-latest: true
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
+
+      - name: Cache yarn
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install
+        # The root `postinstall` chains into `frontend`, so this installs both trees.
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        working-directory: frontend
+        run: yarn lint
+
+      - name: Build
+        run: yarn build
+
+      - name: Verify build output
+        # `wallet/public/frontend/` and `wallet/www/wallet.html` are gitignored, so a
+        # fresh clone 404s on /wallet until this build runs. Asserting the artefacts
+        # exist is what turns "the build exited 0" into "the PWA can actually serve".
+        run: |
+          test -f wallet/public/frontend/index.html
+          test -f wallet/www/wallet.html
+          test -d wallet/public/frontend/assets
+          echo "PWA build output present."
+
+      - name: Upload PWA Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-build
+          path: |
+            wallet/public/frontend/
+            wallet/www/wallet.html
+          retention-days: 3

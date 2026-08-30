@@ -100,7 +100,7 @@ INCOME_CATEGORIES: list[tuple[str, str, list[str]]] = [
 	("Rental Income", "🏘️", []),
 	("Refunds & Cashback", "↩️", []),
 	("Gifts Received", "🎀", []),
-	("Other Income", "➕", []),
+	("Other Income", "➕", []),  # noqa: RUF001 - a category icon, not arithmetic
 ]
 
 #: Transfers keep inter-account movement out of income and expense totals.
@@ -129,7 +129,13 @@ DEFAULT_RULES: list[tuple[str, str, str, str, int]] = [
 	("IRCTC", "IRCTC", "Train", "Out", 20),
 	("Fuel", "INDIAN ?OIL|IOCL|HPCL|BHARAT ?PETROLEUM|BPCL|PETROL|FUEL", "Fuel", "Out", 20),
 	("FASTag", "FASTAG|NETC|TOLL", "FASTag & Tolls", "Out", 20),
-	("OTT subscriptions", "NETFLIX|SPOTIFY|HOTSTAR|PRIMEVIDEO|JIOCINEMA|SONYLIV", "Subscriptions (OTT)", "Out", 20),
+	(
+		"OTT subscriptions",
+		"NETFLIX|SPOTIFY|HOTSTAR|PRIMEVIDEO|JIOCINEMA|SONYLIV",
+		"Subscriptions (OTT)",
+		"Out",
+		20,
+	),
 	("Mobile recharge", "JIO|AIRTEL|VODAFONE|VI RECHARGE|BSNL", "Mobile Recharge", "Out", 30),
 	("Electricity", "BESCOM|MSEB|TNEB|TANGEDCO|ADANI ?ELEC|ELECTRICITY|BSES", "Electricity", "Out", 30),
 	("Broker / SIP", "GROWW|ZERODHA|KUVERA|UPSTOX|COIN|MUTUAL ?FUND|SIP ", "Mutual Funds / SIP", "Out", 30),

@@ -321,6 +321,4 @@ permission_query_conditions = {
 	)
 }
 
-has_permission = {
-	doctype: "wallet.permissions.has_permission" for doctype in permission_query_conditions
-}
+has_permission = {doctype: "wallet.permissions.has_permission" for doctype in permission_query_conditions}

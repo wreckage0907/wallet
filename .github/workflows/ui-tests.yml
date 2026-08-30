@@ -1,0 +1,200 @@
+name: UI Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ui-tests-wallet-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Owner isolation is the app's core invariant and `permissions.py` exempts
+  # Administrator from it, so the whole suite runs as a real user. Keep these in step
+  # with the defaults in wallet/tests/e2e_seed.py.
+  WALLET_E2E_USER: wallet-e2e@example.com
+  WALLET_E2E_PASSWORD: wallet-e2e-password
+  WALLET_E2E_OTHER_USER: wallet-e2e-other@example.com
+
+jobs:
+  ui-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    name: Playwright E2E Tests
+    # Not sharded: the suite is small and every shard would pay for its own
+    # `bench init` + `new-site`, which costs far more than the tests it saves.
+
+    services:
+      redis-cache:
+        image: redis:alpine
+        ports:
+          - 13000:6379
+      redis-queue:
+        image: redis:alpine
+        ports:
+          - 11000:6379
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          check-latest: true
+
+      - name: Add to Hosts
+        run: echo "127.0.0.1 wallet.test" | sudo tee -a /etc/hosts
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/*requirements.txt', '**/pyproject.toml', '**/setup.py', '**/setup.cfg') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
+
+      - name: Cache yarn
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install MariaDB Client
+        run: |
+          sudo apt update
+          sudo apt-get install mariadb-client
+
+      - name: Setup Bench
+        run: |
+          pip install frappe-bench
+          bench init --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
+          mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
+
+      - name: Install Wallet
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench get-app wallet $GITHUB_WORKSPACE
+          bench setup requirements --dev
+          bench new-site --db-root-password root --admin-password admin wallet.test
+          bench --site wallet.test install-app wallet
+        env:
+          CI: "Yes"
+
+      - name: Build PWA
+        # `bench build` only runs Frappe's own esbuild over `*.bundle.*` files; it never
+        # runs an app's Vite build. Without this, /wallet serves nothing — the built
+        # output is gitignored. It has to happen before `bench build`, which is what
+        # links wallet/public into sites/assets.
+        working-directory: /home/runner/frappe-bench/apps/wallet
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Build Assets
+        working-directory: /home/runner/frappe-bench
+        run: bench build
+        env:
+          CI: "Yes"
+
+      - name: Configure Site for UI Tests
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench --site wallet.test set-config allow_tests true
+          bench --site wallet.test set-config host_name "http://wallet.test:8000"
+
+      - name: Seed E2E Fixtures
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench --site wallet.test execute wallet.tests.e2e_seed.mark_setup_complete
+          bench --site wallet.test execute wallet.tests.e2e_seed.seed
+
+      - name: Start Frappe Server
+        working-directory: /home/runner/frappe-bench
+        run: |
+          sed -i 's/^watch:/# watch:/g' Procfile
+          sed -i 's/^schedule:/# schedule:/g' Procfile
+          bench start &> bench_start.log &
+          echo "Waiting for Frappe server to start..."
+          timeout 60 bash -c 'until curl -s http://wallet.test:8000 > /dev/null; do sleep 2; done'
+          echo "Frappe server is ready!"
+
+      - name: Match the browser timezone to the site
+        # Frappe reads `nowdate()` from System Settings, which only the setup wizard
+        # fills in - a CI site never runs it and falls back to `get_system_timezone()`'s
+        # hard-coded "Asia/Kolkata", while the runner is UTC. Every seeded date would
+        # then be 5.5 hours out of step with the browser reading it. Derived from the
+        # live site rather than hard-coded, so it stays correct if that default changes.
+        run: |
+          TZ_NAME=$(curl -s http://wallet.test:8000/api/method/frappe.client.get_time_zone \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['message']['time_zone'])")
+          echo "Site timezone: $TZ_NAME"
+          echo "WALLET_E2E_TZ=$TZ_NAME" >> $GITHUB_ENV
+
+      - name: Install Playwright
+        run: |
+          yarn install --frozen-lockfile
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright Tests
+        run: npx playwright test
+        env:
+          BASE_URL: http://wallet.test:8000
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+      - name: Show Bench Logs on Failure
+        if: failure()
+        working-directory: /home/runner/frappe-bench
+        run: |
+          echo "=== Bench Start Log ==="
+          cat bench_start.log || true
+          echo ""
+          echo "=== Frappe Logs ==="
+          cat logs/*.log || true

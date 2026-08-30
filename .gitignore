@@ -68,3 +68,9 @@ wallet/www/frontend.html
 
 # Symlink created by `bench build`
 wallet/public/node_modules
+
+# Playwright (e2e)
+e2e/.auth/
+playwright-report/
+blob-report/
+test-results/

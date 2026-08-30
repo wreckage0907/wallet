@@ -72,9 +72,7 @@ def _get_import(name: str):
 
 
 @frappe.whitelist(methods=["POST"])
-def parse_statement(
-	name: str, password: str | None = None, statement_format: str | None = None
-) -> dict:
+def parse_statement(name: str, password: str | None = None, statement_format: str | None = None) -> dict:
 	"""Read an attached statement and stage its rows for preview."""
 	doc = _get_import(name)
 

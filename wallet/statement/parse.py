@@ -23,9 +23,17 @@ _AMOUNT_CLEAN = re.compile(r"[^\d.,\-()]")
 _NUMERIC_DATE = re.compile(r"^\s*(\d{1,4})[/\-.](\d{1,2})[/\-.](\d{1,4})")
 
 _TEXT_DATE_FORMATS = (
-	"%d %b %Y", "%d-%b-%Y", "%d/%b/%Y", "%d %B %Y", "%d-%B-%Y",
-	"%b %d %Y", "%b %d, %Y", "%Y-%m-%d", "%Y/%m/%d",
-	"%d %b %y", "%d-%b-%y",
+	"%d %b %Y",
+	"%d-%b-%Y",
+	"%d/%b/%Y",
+	"%d %B %Y",
+	"%d-%B-%Y",
+	"%b %d %Y",
+	"%b %d, %Y",
+	"%Y-%m-%d",
+	"%Y/%m/%d",
+	"%d %b %y",
+	"%d-%b-%y",
 )
 
 

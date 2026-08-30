@@ -5,7 +5,10 @@ frappe.ui.form.on("Wallet Statement Import", {
 	refresh(frm) {
 		if (frm.is_new()) return;
 
-		if (frm.doc.statement_file && ["Draft", "Failed", "Preview Ready"].includes(frm.doc.status)) {
+		if (
+			frm.doc.statement_file &&
+			["Draft", "Failed", "Preview Ready"].includes(frm.doc.status)
+		) {
 			frm.add_custom_button(__("Parse Statement"), () => parse_statement(frm)).addClass(
 				"btn-primary"
 			);
@@ -110,7 +113,7 @@ function show_variance(frm) {
 			: __(
 					"Off by {0}. A row was probably missed, deduplicated too aggressively, or read from the wrong column.",
 					[format_currency(frm.doc.balance_variance)]
-				),
+			  ),
 		clean ? "green" : "red",
 		true
 	);
