@@ -100,6 +100,35 @@ def seed() -> dict:
 	return summary
 
 
+def mark_setup_complete() -> bool:
+	"""Tell Frappe the setup wizard has been run. Returns whether anything changed.
+
+	`bench new-site` leaves the wizard un-run, and the desk sends anyone who lands on it
+	to the setup wizard - which a plain `Wallet User` has no permission to open, so
+	`/app/wallet` renders a "Not permitted" dialog instead of the workspace and every desk
+	spec fails on a fresh site. Nothing is wrong with the app's own permissions; a user
+	holding only `Wallet User` drives the desk perfectly well once this flag is set.
+
+	`frappe.is_setup_complete()` reads the `frappe` row of Installed Application, so that
+	is the flag that actually has to move; the System Settings field is the cached mirror
+	of it that the boot payload reads.
+
+	Meant for a throwaway CI site. On a site whose wizard has genuinely been run this is a
+	no-op, which is why it is a separate entry point rather than part of `seed()`.
+	"""
+	if frappe.is_setup_complete():
+		return False
+
+	frappe.db.set_value("Installed Application", {"app_name": "frappe"}, "is_setup_complete", 1)
+	frappe.db.set_single_value("System Settings", "setup_complete", 1)
+	frappe.clear_cache()
+	# Same reason as in seed(): the bench serving the browser is a different process.
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
+
+	print("Marked the setup wizard complete.")
+	return True
+
+
 def net_worth() -> float:
 	"""The figure the dashboard must render, derived the same way the app derives it.
 

@@ -137,7 +137,9 @@ jobs:
 
       - name: Seed E2E Fixtures
         working-directory: /home/runner/frappe-bench
-        run: bench --site wallet.test execute wallet.tests.e2e_seed.seed
+        run: |
+          bench --site wallet.test execute wallet.tests.e2e_seed.mark_setup_complete
+          bench --site wallet.test execute wallet.tests.e2e_seed.seed
 
       - name: Start Frappe Server
         working-directory: /home/runner/frappe-bench
