@@ -4,8 +4,8 @@
 """The tool bodies exposed over MCP.
 
 Plain functions, registered onto an `MCP` instance by `wallet.mcp.registry`. Kept
-undecorated here so the same read tools can be attached to both the read-only and the
-read-write endpoint without duplicating a line of logic.
+undecorated here so this module stays importable - and unit-testable - without
+`frappe_mcp` installed.
 
 Two rules govern everything in this file:
 

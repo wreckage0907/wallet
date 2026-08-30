@@ -190,9 +190,7 @@ wrong entry is trivially deleted in the PWA.
 ```
 wallet/mcp/
 	__init__.py
-	read.py          # MCP("wallet-read")  + whitelisted handle_mcp
-	write.py         # MCP("wallet-write") + whitelisted handle_mcp
-	endpoint.py      # serve(): mcp.handle() shim, see the correction in §4
+	__init__.py      # MCP("wallet") + whitelisted handle_mcp, see the correction in §4
 	tools.py         # the five tool functions, plain, undecorated
 	registry.py      # register_read_tools(mcp) / register_write_tools(mcp)
 	resolve.py       # name -> docname resolution
@@ -212,13 +210,13 @@ def register_read_tools(mcp):
 Entry points are thin:
 
 ```python
-# wallet/mcp/read.py
-mcp = frappe_mcp.MCP("wallet-read")
+# wallet/mcp/__init__.py
+mcp = frappe_mcp.MCP("wallet")
 
 
 @frappe.whitelist(methods=["GET", "POST"])
 def handle_mcp() -> Response:
-	return serve(mcp, register_read_tools)
+	return _get_server().handle(frappe.request, Response())
 ```
 
 ---
@@ -317,8 +315,8 @@ run the OAuth flow, list tools, call each one.
 **Claude Code:**
 
 ```bash
-claude mcp add --transport http wallet-read \
-	http://demo.localhost:8000/api/method/wallet.mcp.read.handle_mcp
+claude mcp add --transport http wallet \
+	http://demo.localhost/api/method/wallet.mcp.handle_mcp
 ```
 
 Plain HTTP works here only because this bench runs with `developer_mode` on. Frappe
@@ -372,9 +370,13 @@ return would make the model work harder in the overwhelmingly common single-curr
 case. The docstring states the limitation, and the return flags when other-currency
 accounts were skipped rather than silently dropping them.
 
-**3. Module layout is `wallet/mcp/` with `read.py` and `write.py`.** Endpoints are
-`/api/method/wallet.mcp.read.handle_mcp` and `/api/method/wallet.mcp.write.handle_mcp`;
-server names are `wallet-read` and `wallet-write`. A package rather than flat modules
-because the MCP surface brings its own helpers (`resolve.py`, `guard.py`, `registry.py`,
-`tools.py`) that have no meaning outside it — scattering those next to `hooks.py` would
-bury them among the app's core modules.
+**3. Module layout is `wallet/mcp/`,** with the endpoint in `__init__.py` so the URL is
+`/api/method/wallet.mcp.handle_mcp`. A package rather than flat modules because the MCP
+surface brings its own helpers (`resolve.py`, `guard.py`, `registry.py`, `tools.py`) that
+have no meaning outside it — scattering those next to `hooks.py` would bury them among the
+app's core modules. `frappe_mcp` is imported lazily inside the endpoint so the tool bodies
+stay importable, and testable, on a bench without the library.
+
+**4. One endpoint, not two.** Superseded decision — see §2. The read/write URL split was
+built and then removed once testing showed the bearer token is session-wide, making it a
+boundary in appearance only.
