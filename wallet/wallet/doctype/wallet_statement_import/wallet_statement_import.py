@@ -19,11 +19,11 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, getdate
 
+from wallet.api.balance import refresh_cached_balance
 from wallet.categorization import categorize, get_rules
 from wallet.settings import get_setting
 from wallet.statement import detect
 from wallet.statement.parse import detect_dayfirst, parse_amount, parse_date
-from wallet.api.balance import refresh_cached_balance
 from wallet.statement.reader import read_grid
 from wallet.utils.dedup import build_dedup_hash, content_key, occurrence_index
 
@@ -102,7 +102,9 @@ class WalletStatementImport(Document):
 			self.statement_format = fmt.name
 			header_row = fmt.header_row or detect.detect_header(grid)[0]
 			mapping = {
-				target: spec["index"] for target, spec in fmt.get_mapping().items() if spec["index"] is not None
+				target: spec["index"]
+				for target, spec in fmt.get_mapping().items()
+				if spec["index"] is not None
 			}
 			if mapping:
 				return header_row, mapping, "format"
@@ -117,14 +119,14 @@ class WalletStatementImport(Document):
 			)
 
 		signature = detect.header_signature(grid[header_row])
-		remembered = frappe.db.get_value(
-			"Wallet Statement Format", {"header_signature": signature}, "name"
-		)
+		remembered = frappe.db.get_value("Wallet Statement Format", {"header_signature": signature}, "name")
 		if remembered and not self.statement_format:
 			self.statement_format = remembered
 			fmt = frappe.get_doc("Wallet Statement Format", remembered)
 			saved = {
-				target: spec["index"] for target, spec in fmt.get_mapping().items() if spec["index"] is not None
+				target: spec["index"]
+				for target, spec in fmt.get_mapping().items()
+				if spec["index"] is not None
 			}
 			if saved:
 				return header_row, saved, "remembered"
@@ -216,9 +218,7 @@ class WalletStatementImport(Document):
 		self.period_to = max(dates) if dates else None
 		self.statement_opening_balance = opening_balance
 		self.statement_closing_balance = (
-			closing_balance
-			if closing_balance is not None
-			else _last_running_balance(staged)
+			closing_balance if closing_balance is not None else _last_running_balance(staged)
 		)
 
 		self.total_rows = len(staged)
@@ -256,9 +256,7 @@ class WalletStatementImport(Document):
 
 	def _parse_row(self, raw_row: list, mapping: dict, dayfirst: bool) -> dict | None:
 		fmt = self.get_statement_format()
-		transforms = (
-			{row.target_field: row.transform for row in fmt.mappings} if fmt else {}
-		)
+		transforms = {row.target_field: row.transform for row in fmt.mappings} if fmt else {}
 
 		def cell(target):
 			index = mapping.get(target)

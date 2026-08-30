@@ -43,9 +43,7 @@ class PWAAssetRenderer(BaseRenderer):
 		return self.path in ROOT_FILES and self._file_path().is_file()
 
 	def _file_path(self) -> Path:
-		return Path(frappe.get_app_path("wallet", "public", "frontend")) / ROOT_FILES.get(
-			self.path, ""
-		)
+		return Path(frappe.get_app_path("wallet", "public", "frontend")) / ROOT_FILES.get(self.path, "")
 
 	def render(self):
 		path = self._file_path()

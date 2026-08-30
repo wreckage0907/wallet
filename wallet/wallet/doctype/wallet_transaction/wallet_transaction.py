@@ -29,9 +29,15 @@ class WalletTransaction(Document):
 		"""A transaction before the account's opening date would be silently excluded from
 		the balance aggregate, so reject it rather than quietly lose it."""
 		opening_date = frappe.db.get_value("Wallet Account", self.account, "opening_date")
-		if opening_date and self.posting_date and frappe.utils.getdate(self.posting_date) < frappe.utils.getdate(opening_date):
+		if (
+			opening_date
+			and self.posting_date
+			and frappe.utils.getdate(self.posting_date) < frappe.utils.getdate(opening_date)
+		):
 			frappe.throw(
-				_("{0} is before this account's opening date ({1}). Move the opening date back first.").format(
+				_(
+					"{0} is before this account's opening date ({1}). Move the opening date back first."
+				).format(
 					frappe.format(self.posting_date, {"fieldtype": "Date"}),
 					frappe.format(opening_date, {"fieldtype": "Date"}),
 				)

@@ -72,6 +72,12 @@ export function monthRange(offset = 0) {
 	const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
 	const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
 	const iso = (d) =>
-		`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-	return { from: iso(start), to: iso(end), label: start.toLocaleString("en-IN", { month: "long" }) };
+		`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+			d.getDate()
+		).padStart(2, "0")}`;
+	return {
+		from: iso(start),
+		to: iso(end),
+		label: start.toLocaleString("en-IN", { month: "long" }),
+	};
 }

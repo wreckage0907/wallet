@@ -163,9 +163,7 @@ def _ensure_category(
 	user = frappe.session.user
 
 	if default_key:
-		existing = frappe.db.get_value(
-			"Wallet Category", {"default_key": default_key, "owner": user}
-		)
+		existing = frappe.db.get_value("Wallet Category", {"default_key": default_key, "owner": user})
 		if existing:
 			return existing, False
 
