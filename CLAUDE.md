@@ -168,23 +168,47 @@ icon 404.
 
 ## Audit findings — open
 
-1. **`Wallet Budget` does not exist.** It is listed in `permissions.py:OWNED_DOCTYPES` and
+1. **The desk tree view for `Wallet Category` bypasses owner isolation.** *(verified)*
+   `frappe.desk.treeview._get_children` builds a raw `frappe.qb` query
+   (`apps/frappe/frappe/desk/treeview.py`), filtering only on the parent field, `docstatus`
+   and `disabled`. `frappe.qb` does not apply `permission_query_conditions`, so
+   `/app/wallet-category/view/tree` enumerates every user's categories.
+
+   Measured on `demo.localhost` as `girish.raghav2004@gmail.com`:
+   `frappe.client.get_count` → **107** categories (30 roots); `treeview.get_children` with
+   an empty parent → **180** roots, **150** of them not in the permission-aware list.
+   Expanding a leaked node lists its children too.
+
+   Severity is bounded: `frappe.client.get` on a leaked docname still returns
+   **403 PermissionError**, so this is name enumeration rather than a record read, and
+   `Wallet Category` is the app's only `is_tree` doctype — accounts and transactions are
+   unaffected. The PWA is unaffected (it goes through `frappe.client.get_list`).
+
+   Fix: add `wallet_category_tree.js` setting
+   `frappe.treeview_settings["Wallet Category"] = { get_tree_nodes: "<owner-filtered method>" }`,
+   and implement that method with an explicit `owner = frappe.session.user` filter.
+
+   This is precisely the bug `permissions.py` predicts in its module docstring. The
+   docstring says to grep for `get_all`; it should say `get_all`, `frappe.qb` **and**
+   framework code that queries on your behalf.
+
+2. **`Wallet Budget` does not exist.** It is listed in `permissions.py:OWNED_DOCTYPES` and
    therefore registered in both `permission_query_conditions` and `has_permission` in
    `hooks.py`. Harmless today (the hooks never fire) but it is a dangling promise: either
    build the doctype or drop the two references.
-2. **`requires-python = ">=3.14"` in `pyproject.toml`, but the bench runs Python 3.12.**
+3. **`requires-python = ">=3.14"` in `pyproject.toml`, but the bench runs Python 3.12.**
    A plain `pip install -e .` would refuse. Loosen it or state the real floor.
-3. **Test coverage is MCP-only.** 29 tests, all in `wallet/tests/test_mcp_tools.py`. The
+4. **Test coverage is MCP-only.** 29 tests, all in `wallet/tests/test_mcp_tools.py`. The
    highest-risk code in the app — `statement/parse.py`, `statement/detect.py`,
    `utils/dedup.py`, `api/balance.py` — has no tests at all. `parse.py` and `detect.py`
    are pure functions over plain data and are the cheapest possible things to cover.
-4. **The MCP install is not reproducible.** `frappe-mcp` lives only in the bench
+5. **The MCP install is not reproducible.** `frappe-mcp` lives only in the bench
    virtualenv; a container rebuild, fresh `bench init` or Frappe Cloud deploy loses it and
    the endpoint 500s. Documented in the README, but nothing in the repo restores it.
-5. **`allow_mcp_writes` is a site-wide Single, not a per-user opt-in.** On a multi-user
+6. **`allow_mcp_writes` is a site-wide Single, not a per-user opt-in.** On a multi-user
    site, one System Manager turning it on opens the write path for every connected agent
    (each still confined to its own owner's records).
-6. **No write path in the PWA.** Adding a transaction on a phone means falling back to the
+7. **No write path in the PWA.** Adding a transaction on a phone means falling back to the
    desk UI, which is the one context the desk is worst at.
 
 ## Planning / Spec-ing
