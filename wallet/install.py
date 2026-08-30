@@ -68,13 +68,33 @@ def get_wallet_users() -> list[str]:
 
 @contextlib.contextmanager
 def as_user(user: str):
-	"""Run a block as `user` so inserted documents are owned by them."""
-	original = frappe.session.user
+	"""Run a block as `user` so inserted documents are owned by them.
+
+	`frappe.set_user` does more than swap the user: it also overwrites
+	`frappe.local.session.sid` with the username and replaces `session.data` and
+	`form_dict` with empty dicts. Under `bench execute` or in a test that is harmless,
+	because nothing writes the session back. Inside a *web request* it is not - Frappe
+	persists the session object to the cache at the end of the request, so a caller who
+	hits `ensure_setup` or `restore_default_categories` would be handed a session whose
+	stored data is empty and be logged out on their very next request.
+
+	Swapping back is therefore not enough; the parts of the session `set_user` clobbers
+	have to be put back as they were.
+	"""
+	session = frappe.local.session
+	original_user = session.user
+	original_sid = session.sid
+	original_data = session.data
+	original_form_dict = frappe.local.form_dict
+
 	frappe.set_user(user)
 	try:
 		yield
 	finally:
-		frappe.set_user(original)
+		frappe.set_user(original_user)
+		session.sid = original_sid
+		session.data = original_data
+		frappe.local.form_dict = original_form_dict
 
 
 def seed_user_defaults(user: str) -> dict:
