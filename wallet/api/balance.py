@@ -82,6 +82,7 @@ def get_overview(as_on: str | None = None) -> dict:
 			"account_name",
 			"account_type",
 			"bank",
+			"masked_account_number",
 			"currency",
 			"color",
 			"is_liability",
