@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="Wallet logo">
+  <defs>
+    <linearGradient id="badge" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+
+  <!-- squircle badge -->
+  <rect width="512" height="512" rx="120" fill="url(#badge)"/>
+
+  <!-- wallet body -->
+  <rect x="96" y="150" width="320" height="230" rx="40" fill="#ffffff"/>
+
+  <!-- card slot / clasp on the right edge -->
+  <rect x="300" y="228" width="140" height="74" rx="26" fill="#f1f5f9"/>
+  <circle cx="356" cy="265" r="19" fill="#047857"/>
+
+  <!-- the statement, parsed: three category bars rising out of the wallet -->
+  <rect x="150" y="286" width="30" height="52" rx="15" fill="#94a3b8"/>
+  <rect x="200" y="252" width="30" height="86" rx="15" fill="#10b981"/>
+  <rect x="250" y="212" width="30" height="126" rx="15" fill="#0f172a"/>
+</svg>
