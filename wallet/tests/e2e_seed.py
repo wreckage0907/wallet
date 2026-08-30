@@ -86,7 +86,9 @@ def seed() -> dict:
 		other_account = _account(OTHER_ACCOUNT, "Savings", opening_balance=OTHER_SECRET)
 		_transaction(other_account, nowdate(), "Out", OTHER_SECRET, OTHER_SECRET_LABEL, OTHER_SECRET_LABEL)
 
-	frappe.db.commit()
+	# The browser reaches these rows through a different process entirely, so they have to
+	# be committed - the point of the script is to leave state behind.
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 
 	summary = {
 		"user": user,
@@ -122,7 +124,9 @@ def purge(*users: str) -> None:
 			if frappe.db.table_exists(doctype):
 				frappe.db.delete(doctype, {"owner": user})
 
-	frappe.db.commit()
+	# Committed before the re-seed so a failure part-way through leaves a clean slate
+	# rather than a half-purged one that the next run would seed on top of.
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 
 
 def _make_user(email: str) -> str:

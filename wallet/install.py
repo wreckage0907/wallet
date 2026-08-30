@@ -87,10 +87,18 @@ def as_user(user: str):
 	original_data = session.data
 	original_form_dict = frappe.local.form_dict
 
+	# Audited for frappe-semgrep-rules' frappe-setuser: seeding has to run as the owner,
+	# because `Document.set_user_and_timestamp` stamps `owner` from the session. `user` is
+	# never request input - the two whitelisted callers (`ensure_setup`,
+	# `restore_default_categories`) pass `frappe.session.user`, and the rest run at
+	# install time or from the `User.after_insert` hook. The swap is bounded by this
+	# context manager and the session is restored in full below.
+	# nosemgrep: frappe-semgrep-rules.rules.security.frappe-setuser
 	frappe.set_user(user)
 	try:
 		yield
 	finally:
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-setuser
 		frappe.set_user(original_user)
 		session.sid = original_sid
 		session.data = original_data
