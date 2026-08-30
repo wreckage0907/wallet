@@ -10,6 +10,11 @@ dynamic = ["version"]
 dependencies = [
     # "frappe~=16.0.0" # Installed and managed by bench.
     "msoffcrypto-tool~=5.4",  # decrypt password-protected bank statement xlsx (ECMA-376)
+    # The MCP server also needs `frappe-mcp`, which is deliberately NOT listed here: it
+    # pins Werkzeug==3.1.3 and pydantic~=2.11.7 against Frappe's newer pins, so resolving
+    # it would downgrade Werkzeug and break the bench. Install it with --no-deps; see the
+    # MCP server section of README.md. Everything except the two MCP endpoints works
+    # without it.
 ]
 
 [build-system]

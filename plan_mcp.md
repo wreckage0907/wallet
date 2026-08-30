@@ -323,8 +323,10 @@ claude mcp add --transport http wallet-read \
 	http://demo.localhost:8000/api/method/wallet.mcp.read.handle_mcp
 ```
 
-`demo.localhost` counts as a localhost origin, so plain HTTP is fine locally; a deployed
-instance needs HTTPS.
+Plain HTTP works here only because this bench runs with `developer_mode` on. Frappe
+rejects dynamic client registration for any non-https `redirect_uri` otherwise, with no
+loopback exemption — so a production site breaks the self-registration flow that MCP
+clients rely on. See the warning in README.md.
 
 **Automated:** `wallet/tests/test_mcp_tools.py` calls the tool functions directly under
 `frappe.set_user(...)`. The cases that matter most:

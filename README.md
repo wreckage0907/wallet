@@ -31,11 +31,21 @@ break the bench. Install it without its dependencies instead:
 
 ```bash
 ./env/bin/pip install jsonschema
-./env/bin/pip install --no-deps git+https://github.com/frappe/mcp.git
+./env/bin/pip install --no-deps \
+	git+https://github.com/frappe/mcp.git@11d5076b1bf4483b2ff6751a13e0736f5396b1e6
 bench restart
 ```
 
-Verify by listing the tools (any authenticated user):
+The commit is pinned deliberately — the library ships breaking changes without notice.
+
+This install lives only in the bench virtualenv, and nothing in the repo restores it. A
+container or image rebuild, a fresh `bench init`, or a Frappe Cloud deploy will not have
+it, and both endpoints will fail with `Failed to get method for command
+wallet.mcp.read.handle_mcp with No module named 'frappe_mcp'`. Re-run the two commands
+above. The rest of the app is unaffected — nothing else imports `frappe_mcp`.
+
+Verify by listing the tools (as a user with the `Wallet User` or `System Manager`
+role — `wallet/install.py` creates the role but does not assign it):
 
 ```bash
 curl -s -X POST -H "Authorization: token <api_key>:<api_secret>" \
@@ -63,7 +73,18 @@ claude mcp add --transport http wallet \
 	https://<your-site>/api/method/wallet.mcp.read.handle_mcp
 ```
 
-Remote clients require HTTPS; `localhost` origins may use plain HTTP for local development.
+> [!WARNING]
+> Dynamic client registration requires **every** `redirect_uri` to be `https`, unless the
+> site runs with `developer_mode` on (`frappe/integrations/utils.py`). There is no
+> loopback exemption. MCP clients register loopback redirects like
+> `http://localhost:<port>/callback`, so on a production site the self-registration flow
+> above fails with `redirect_uris must be https`. Either register an OAuth Client for the
+> client by hand, or keep `developer_mode` on. This is a `developer_mode` distinction, not
+> a local-versus-remote one.
+
+Browser-based clients such as the MCP Inspector additionally need their origin listed in
+`OAuth Settings → Allowed Public Client Origins`, which is empty by default. Native
+clients (Claude Code, Claude Desktop) do not.
 
 > [!IMPORTANT]
 > A Frappe OAuth bearer token is session-wide, not endpoint-scoped — `validate_oauth`
