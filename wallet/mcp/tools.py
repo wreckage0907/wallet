@@ -40,7 +40,10 @@ def list_accounts() -> dict:
 	Credit cards are accounts with `type` "Credit Card" and `is_liability` true; a
 	negative balance on one is money owed.
 
-	Returns accounts plus net worth totals in the default currency.
+	Every account is listed with its own currency. The `assets`, `liabilities` and
+	`net_worth` totals cover the default currency ONLY - when `has_other_currencies` is
+	true they are not the whole picture, and saying so is better than implying a total
+	that excludes an account the user can see in the same response.
 	"""
 	overview = get_overview()
 
@@ -97,6 +100,8 @@ def list_transactions(
 	if direction:
 		filters["direction"] = _validate_direction(direction)
 
+	capped = min(max(int(limit), 1), MAX_LIMIT)
+
 	if from_date and to_date:
 		filters["posting_date"] = ["between", [from_date, to_date]]
 	elif from_date:
@@ -124,8 +129,13 @@ def list_transactions(
 			"account",
 		],
 		order_by="posting_date desc, creation desc",
-		limit_page_length=min(max(int(limit), 1), MAX_LIMIT),
+		# One more than asked for, purely to detect truncation. A model that receives
+		# exactly `limit` rows and no signal will happily sum them and report the total
+		# as fact - the most likely way this tool produces a confident wrong answer.
+		limit_page_length=capped + 1,
 	)
+	has_more = len(rows) > capped
+	rows = rows[:capped]
 
 	categories = resolve.category_names()
 	accounts = resolve.account_names()
@@ -146,6 +156,9 @@ def list_transactions(
 			for row in rows
 		],
 		"count": len(rows),
+		# True means these are the most recent matches, not all of them. Narrow the date
+		# range, or use get_spending_summary, which aggregates over everything.
+		"has_more": has_more,
 	}
 
 
@@ -194,10 +207,17 @@ def get_spending_summary(from_date: str, to_date: str, account: str | None = Non
 	"""
 	currency = get_setting("default_currency") or "INR"
 
+	# `disabled: 0` matches list_accounts, which goes through get_overview. Without it the
+	# summary reports spend against closed accounts the model was never shown.
 	in_currency = frappe.get_list(
-		"Wallet Account", filters={"currency": currency}, pluck="name", limit_page_length=0
+		"Wallet Account",
+		filters={"currency": currency, "disabled": 0},
+		pluck="name",
+		limit_page_length=0,
 	)
-	total_accounts = len(frappe.get_list("Wallet Account", pluck="name", limit_page_length=0))
+	total_accounts = len(
+		frappe.get_list("Wallet Account", filters={"disabled": 0}, pluck="name", limit_page_length=0)
+	)
 
 	if account:
 		resolved = resolve.account(account)
@@ -243,8 +263,11 @@ def get_spending_summary(from_date: str, to_date: str, account: str | None = Non
 		else:
 			money_out += amount
 
-		label = names.get(row.get("category")) or _("Uncategorized")
-		bucket = by_category.setdefault(label, {"category": label, "in": 0.0, "out": 0.0, "count": 0})
+		# Keyed by docname, not label: category_name is not unique per owner, and a real
+		# category named "Uncategorized" would otherwise merge with the null bucket.
+		key = row.get("category")
+		label = names.get(key) or _("Uncategorized")
+		bucket = by_category.setdefault(key, {"category": label, "in": 0.0, "out": 0.0, "count": 0})
 		bucket["in" if row["direction"] == "In" else "out"] += amount
 		bucket["count"] += 1
 
@@ -286,6 +309,16 @@ def add_transaction(
 	        Interest, Charges, Other.
 	    reference_number: Bank reference, UTR or cheque number, if known.
 	"""
+	# Checked in the tool body rather than at the endpoint, so it holds however this is
+	# reached. A URL-level split would not: the bearer token is session-wide.
+	if not get_setting("allow_mcp_writes"):
+		frappe.throw(
+			_(
+				"Recording transactions over MCP is turned off. Enable "
+				'"Allow MCP Writes" in Wallet Settings to allow it.'
+			)
+		)
+
 	account_id = resolve.account(account)
 	direction = _validate_direction(direction)
 
@@ -315,7 +348,12 @@ def add_transaction(
 	doc.insert()
 
 	categories = resolve.category_names()
-	balance = get_account_balance(account_id)
+	# As of the transaction's own date when that is in the future: get_account_balance
+	# defaults to today and filters `posting_date <= as_on`, so a future-dated entry would
+	# leave the balance unchanged - and the balance is what makes a misread amount visible,
+	# exactly for the entries most likely to be mis-transcribed.
+	as_on = max(str(doc.posting_date), nowdate())
+	balance = get_account_balance(account_id, as_on=as_on)
 
 	return {
 		"created": True,
@@ -334,6 +372,7 @@ def add_transaction(
 		},
 		# The point of returning this: it is where a misread amount becomes visible.
 		"account_balance": flt(balance["balance"]),
+		"balance_as_on": as_on,
 		"currency": balance["currency"],
 	}
 

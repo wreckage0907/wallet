@@ -29,22 +29,20 @@ across the whole site, which is the opposite of what a finance app wants.
 
 ---
 
-## 2. Architecture: two endpoints
+## 2. Architecture: one endpoint
 
-Two `MCP` instances, so the read surface can be handed out without the write surface.
+`/api/method/wallet.mcp.handle_mcp`, carrying all five tools.
 
-| Endpoint | Instance | Tools |
-|---|---|---|
-| `/api/method/wallet.mcp.read.handle_mcp` | `wallet-read` | the 4 read tools |
-| `/api/method/wallet.mcp.write.handle_mcp` | `wallet-write` | the 4 read tools **+** `add_transaction` |
+This started as two endpoints, read and write. That was wrong, and testing is what showed
+it: a Frappe OAuth bearer token is session-wide, so a token issued for the "read-only" URL
+can POST to the write URL unchanged. The split looked like a boundary while providing none
+of one, which is worse than not having it.
 
-The write endpoint deliberately includes the read tools. An agent cannot add a
-transaction well without first resolving an account name and checking what is already
-there, and forcing the user to connect two servers to do one job is bad ergonomics.
-
-`MCP.register` can only be used once per instance, so two endpoints means two instances.
-Tools are written as plain functions and registered imperatively onto whichever
-instance(s) need them (see §6) — no duplicated tool bodies.
+Read-only is only a guarantee if it is enforced where the caller cannot route around it, so
+`add_transaction` checks `Wallet Settings.allow_mcp_writes` in the tool body. Off by
+default: reading your finances is far less consequential than writing to them. Tool
+selection is expressed the way MCP intends, with `readOnlyHint` / `destructiveHint`
+annotations that clients gate on.
 
 ---
 

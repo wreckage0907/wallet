@@ -9,7 +9,9 @@
   "fiscal_year_start_month",
   "col_break_1",
   "auto_categorize",
-  "max_import_rows"
+  "max_import_rows",
+  "mcp_section",
+  "allow_mcp_writes"
  ],
  "fields": [
   {
@@ -49,6 +51,18 @@
    "fieldname": "max_import_rows",
    "fieldtype": "Int",
    "label": "Max Rows per Statement Import"
+  },
+  {
+   "fieldname": "mcp_section",
+   "fieldtype": "Section Break",
+   "label": "MCP"
+  },
+  {
+   "default": "0",
+   "description": "Let an AI agent connected over MCP record transactions. Off by default: reading your finances is far less consequential than writing to them. This is enforced in the tool itself, so it holds however the endpoint is reached.",
+   "fieldname": "allow_mcp_writes",
+   "fieldtype": "Check",
+   "label": "Allow MCP Writes"
   }
  ],
  "icon": "fa fa-cog",

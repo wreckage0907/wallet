@@ -19,6 +19,15 @@ belongs to another user is not resolvable and does not appear in the options.
 import frappe
 from frappe import _
 
+#: How many valid names to quote back in a "no such account" error.
+MAX_OPTIONS = 15
+
+
+#: Disabled records are hidden from list_accounts and list_categories, so they must not be
+#: resolvable either - otherwise the model can filter and categorize by names it was never
+#: shown, and a spending summary reports money it cannot attribute to any visible account.
+_ENABLED = {"disabled": 0}
+
 
 def _lookup(doctype: str, label_field: str, value: str) -> str:
 	"""Docname for `value`, matched against `label_field` then the docname itself."""
@@ -27,6 +36,7 @@ def _lookup(doctype: str, label_field: str, value: str) -> str:
 
 	rows = frappe.get_list(
 		doctype,
+		filters=_ENABLED,
 		or_filters={label_field: value, "name": value},
 		fields=["name", label_field],
 		limit_page_length=0,
@@ -61,11 +71,18 @@ def _lookup(doctype: str, label_field: str, value: str) -> str:
 
 def options(doctype: str, label_field: str) -> list[str]:
 	"""Every name the session user may refer to, for use in error messages."""
-	return sorted(
+	names = sorted(
 		row[label_field]
-		for row in frappe.get_list(doctype, fields=[label_field], limit_page_length=0)
+		for row in frappe.get_list(doctype, filters=_ENABLED, fields=[label_field], limit_page_length=0)
 		if row.get(label_field)
 	)
+
+	# Capped: on a typo this whole list goes to the model, and a user with 100 categories
+	# does not need all of them quoted back to learn they mistyped one.
+	if len(names) > MAX_OPTIONS:
+		return [*names[:MAX_OPTIONS], f"... and {len(names) - MAX_OPTIONS} more"]
+
+	return names
 
 
 def account(value: str) -> str:
