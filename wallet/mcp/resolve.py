@@ -43,12 +43,16 @@ def _lookup(doctype: str, label_field: str, value: str) -> str:
 	)
 
 	# Case-insensitive fallback. MariaDB collates case-insensitively by default, so this
-	# is belt-and-braces for sites configured otherwise.
+	# is belt-and-braces for sites configured otherwise. It carries `_ENABLED` too:
+	# without it, the one thing this pass reliably adds over the query above is the
+	# disabled records that query exists to exclude.
 	if not rows:
 		wanted = value.strip().casefold()
 		rows = [
 			row
-			for row in frappe.get_list(doctype, fields=["name", label_field], limit_page_length=0)
+			for row in frappe.get_list(
+				doctype, filters=_ENABLED, fields=["name", label_field], limit_page_length=0
+			)
 			if (row.get(label_field) or "").strip().casefold() == wanted
 		]
 

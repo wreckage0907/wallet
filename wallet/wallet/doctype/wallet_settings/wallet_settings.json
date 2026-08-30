@@ -59,7 +59,7 @@
   },
   {
    "default": "0",
-   "description": "Let an AI agent connected over MCP record transactions. Off by default: reading your finances is far less consequential than writing to them. This is enforced in the tool itself, so it holds however the endpoint is reached.",
+   "description": "Let an AI agent connected over MCP record transactions. Off by default: reading your finances is far less consequential than writing to them. This is enforced in the tool itself, so it holds however the endpoint is reached. Site-wide, not per user - on a multi-user site this opens the write path for every connected agent, each still confined to its own owner's records.",
    "fieldname": "allow_mcp_writes",
    "fieldtype": "Check",
    "label": "Allow MCP Writes"

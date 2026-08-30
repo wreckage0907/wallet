@@ -93,6 +93,14 @@ def list_transactions(
 
 	if account:
 		filters["account"] = resolve.account(account)
+	else:
+		# Same `disabled: 0` convention as list_accounts and get_spending_summary. Without
+		# it this tool reports spend list_accounts cannot account for, labelled with the
+		# name of an account the model was never shown and cannot ask a follow-up about.
+		filters["account"] = [
+			"in",
+			frappe.get_list("Wallet Account", filters={"disabled": 0}, pluck="name", limit_page_length=0),
+		]
 
 	if category:
 		filters["category"] = resolve.category(category)

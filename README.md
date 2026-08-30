@@ -33,7 +33,9 @@ One endpoint rather than separate read and write URLs. Splitting them looks like
 boundary and is not one: a Frappe OAuth bearer token is session-wide, so a token issued for
 a "read-only" URL can post to the write URL just as easily. Instead, **writes are off by
 default** and enabled with `Allow MCP Writes` in Wallet Settings — checked inside the tool,
-so it holds however the endpoint is reached. Which tools an agent should reach for is
+so it holds however the endpoint is reached. That setting is a site-wide Single, not a
+per-user opt-in: on a multi-user site, turning it on opens the write path for every
+connected agent, each still confined to its own owner's records. Which tools an agent should reach for is
 expressed with MCP's own `readOnlyHint` / `destructiveHint` annotations, which clients use
 to gate and confirm.
 

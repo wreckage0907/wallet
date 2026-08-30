@@ -29,10 +29,17 @@ class TestMCPTools(IntegrationTestCase):
 		purge(cls.alice, cls.bob)
 
 		with set_user(cls.alice):
-			cls.alice_account = make_account("Alice Savings")
+			cls.alice_account = make_account("Alice Savings", masked_account_number="XX4321")
 			cls.alice_category = make_category("Alice Groceries")
 			make_transaction(cls.alice_account, "2026-08-01", "Out", 250, "Alice supermarket")
 			make_transaction(cls.alice_account, "2026-08-02", "In", 5000, "Alice salary")
+
+			# A closed account that still has history on it. list_accounts, resolve and
+			# list_transactions must all agree it is gone - disabled after the row is
+			# written, via db.set_value, so validation does not reject its own fixture.
+			cls.alice_closed = make_account("Alice Closed")
+			make_transaction(cls.alice_closed, "2026-08-03", "Out", 700, "Alice closed spend")
+			frappe.db.set_value("Wallet Account", cls.alice_closed, "disabled", 1)
 
 		with set_user(cls.bob):
 			cls.bob_account = make_account("Bob Current")
@@ -57,6 +64,13 @@ class TestMCPTools(IntegrationTestCase):
 
 		self.assertIn("Alice Savings", names)
 		self.assertNotIn("Bob Current", names)
+
+	def test_list_accounts_reports_the_masked_number(self):
+		"""It is what tells two accounts at the same bank apart, so it must be fetched."""
+		with set_user(self.alice):
+			account = next(a for a in tools.list_accounts()["accounts"] if a["name"] == "Alice Savings")
+
+		self.assertEqual(account["masked_number"], "XX4321")
 
 	def test_list_transactions_shows_only_own_transactions(self):
 		with set_user(self.alice):
@@ -99,6 +113,39 @@ class TestMCPTools(IntegrationTestCase):
 	def test_account_name_is_case_insensitive(self):
 		with set_user(self.alice):
 			self.assertEqual(resolve.account("alice savings"), self.alice_account)
+
+	# --- disabled accounts ----------------------------------------------------------
+
+	def test_disabled_account_is_not_resolvable(self):
+		with set_user(self.alice), self.assertRaises(frappe.ValidationError):
+			resolve.account("Alice Closed")
+
+	def test_disabled_account_is_not_resolvable_by_the_case_fallback(self):
+		"""The fallback pass must carry the same `disabled` filter as the query it backs up."""
+		with set_user(self.alice), self.assertRaises(frappe.ValidationError):
+			resolve.account("alice closed")
+
+	def test_list_accounts_excludes_disabled_accounts(self):
+		with set_user(self.alice):
+			names = [a["name"] for a in tools.list_accounts()["accounts"]]
+
+		self.assertNotIn("Alice Closed", names)
+
+	def test_list_transactions_excludes_disabled_accounts(self):
+		"""Otherwise the model is shown spend it cannot attribute to any visible account."""
+		with set_user(self.alice):
+			descriptions = [t["description"] for t in tools.list_transactions()["transactions"]]
+
+		self.assertIn("Alice supermarket", descriptions)
+		self.assertNotIn("Alice closed spend", descriptions)
+
+	def test_spending_summary_excludes_disabled_accounts(self):
+		# Scoped to the one day the closed account's row falls on: the add_transaction
+		# tests commit, so a month-wide window here would depend on execution order.
+		with set_user(self.alice):
+			summary = tools.get_spending_summary("2026-08-03", "2026-08-03")
+
+		self.assertEqual(summary["money_out"], 0)
 
 	# --- write gate -----------------------------------------------------------------
 
@@ -305,7 +352,7 @@ def make_user(email: str) -> str:
 	return email
 
 
-def make_account(account_name: str) -> str:
+def make_account(account_name: str, masked_account_number: str | None = None) -> str:
 	return (
 		frappe.get_doc(
 			{
@@ -313,6 +360,7 @@ def make_account(account_name: str) -> str:
 				"account_name": account_name,
 				"account_type": "Savings",
 				"currency": "INR",
+				"masked_account_number": masked_account_number,
 				"opening_balance": 0,
 				"opening_date": "2020-01-01",
 			}
