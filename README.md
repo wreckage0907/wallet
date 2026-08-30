@@ -111,6 +111,58 @@ Browser-based clients such as the MCP Inspector additionally need their origin l
 > (`wallet/permissions.py` exempts it deliberately), so every answer would silently
 > aggregate all users' data. Connect as your own user.
 
+### Tests
+
+**Server tests** — `bench --site <site> run-tests --app wallet`. Currently the MCP tool
+bodies (`wallet/tests/test_mcp_tools.py`).
+
+**End-to-end tests** — Playwright, against a running bench.
+
+```bash
+# once
+yarn install
+npx playwright install chromium
+
+# the fixtures live server-side, so they are seeded by bench, not by the browser
+bench --site <site> execute wallet.tests.e2e_seed.seed
+
+BASE_URL=http://<site>:8000 yarn test:e2e          # headless
+BASE_URL=http://<site>:8000 yarn test:e2e:ui       # pick and watch individual specs
+```
+
+The suite never logs in as Administrator. `wallet/permissions.py` exempts Administrator
+from owner isolation, so a session holding it would pass every isolation assertion no
+matter how broken the query conditions were. `wallet/tests/e2e_seed.py` therefore creates
+two ordinary `Wallet User` accounts — the one the browser drives, and a second holder
+whose data acts as a canary that must never appear in the first one's session. Both are
+idempotent to re-seed.
+
+Specs are split by the surface they exercise:
+
+| Path | Project | What it covers |
+|---|---|---|
+| `e2e/tests/pwa/` | `pwa` (Pixel 7) | the mobile PWA at `/wallet` |
+| `e2e/tests/desk/` | `desk` (Desktop Chrome) | the desk workspace at `/app/wallet` |
+| `e2e/tests/api/` | `desk` | owner isolation, straight at `/api/resource` |
+
+Amounts and fixture names are declared once in `e2e/helpers/fixtures.ts` and derived from
+there, so changing a seeded figure does not leave a stale expectation in a spec.
+
+### CI
+
+Four workflows, all on pull requests:
+
+| Workflow | Job | What it proves |
+|---|---|---|
+| `ci.yml` | Server Tests | `bench run-tests --app wallet` on a fresh site |
+| `frontend.yml` | Lint & Build PWA | `oxlint`, `yarn build`, and that the build artefacts actually exist |
+| `ui-tests.yml` | Playwright E2E Tests | the whole stack, seeded and driven in a browser |
+| `linters.yml` | Semantic Commits / Semgrep / Pre-Commit | conventional commits, Frappe's semgrep rules, `pre-commit` |
+
+`bench build` runs only Frappe's own esbuild over `*.bundle.*` files — it never runs an
+app's Vite build. The PWA build output is gitignored, so both `frontend.yml` and
+`ui-tests.yml` run `yarn build` explicitly; without it `/wallet` serves nothing.
+
 ### Contributing
 
 This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
