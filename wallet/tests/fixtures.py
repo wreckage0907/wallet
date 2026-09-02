@@ -46,17 +46,24 @@ def purge(*users: str) -> None:
 def make_user(email: str, roles: tuple[str, ...] = ("Wallet User",)) -> str:
 	"""A System User with the Wallet role. Idempotent - returns the email either way.
 
-	`in_import` is set for the insert because Frappe throttles user creation at
-	`throttle_user_limit` (60) new users an hour, site-wide, to blunt signup abuse. The
-	suites here create a couple of holders each and a full run goes well past that in
-	minutes, so without this the tail of the suite fails with a bare "Throttled" that has
-	nothing to do with what it was testing. `in_import` is the framework's own escape
-	hatch for exactly this - bulk creation that is not a signup - and it is set only
-	around the insert.
+	The throttle is lifted for the insert. Frappe refuses more than
+	`throttle_user_limit` (default 60) new users an hour, site-wide, to blunt signup
+	abuse - and this suite creates about that many holders in under two minutes, so the
+	tail of a run on a fresh site fails with a bare "Throttled" that has nothing to do
+	with what it was testing.
+
+	Raising the limit in `frappe.local.conf` is the narrow way to do it: the value is the
+	one `throttle_user_creation` reads, the change is process-local (nothing is written to
+	site_config.json), and it is put back afterwards.
+
+	`frappe.flags.in_import` is the framework's other escape hatch from that check and is
+	deliberately NOT used: it also makes `Document._set_defaults` return early, so the
+	user comes out with `enabled = 0` and never appears in `get_wallet_users`. That failed
+	only on a fresh site, which is to say only in CI.
 	"""
 	if not frappe.db.exists("User", email):
-		previous = frappe.flags.in_import
-		frappe.flags.in_import = True
+		previous = frappe.local.conf.get("throttle_user_limit")
+		frappe.local.conf.throttle_user_limit = 100_000
 		try:
 			frappe.get_doc(
 				{
@@ -68,7 +75,10 @@ def make_user(email: str, roles: tuple[str, ...] = ("Wallet User",)) -> str:
 				}
 			).insert(ignore_permissions=True)
 		finally:
-			frappe.flags.in_import = previous
+			if previous is None:
+				frappe.local.conf.pop("throttle_user_limit", None)
+			else:
+				frappe.local.conf.throttle_user_limit = previous
 
 	return email
 
