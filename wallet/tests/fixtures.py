@@ -139,6 +139,19 @@ def make_rule(
 	)
 
 
+def make_bank(bank_name: str = "Test Bank") -> str:
+	"""Shared reference data, not owner-isolated - so this is idempotent across suites."""
+	existing = frappe.db.get_value("Wallet Bank", {"bank_name": bank_name})
+	if existing:
+		return existing
+
+	return (
+		frappe.get_doc({"doctype": "Wallet Bank", "bank_name": bank_name})
+		.insert(ignore_permissions=True)
+		.name
+	)
+
+
 def make_transaction(
 	account: str,
 	posting_date: str,
@@ -179,3 +192,106 @@ def commit() -> None:
 	# request handlers, where Frappe manages the transaction and a manual commit defeats it.
 	# nosemgrep: frappe-semgrep-rules.rules.frappe-manual-commit
 	frappe.db.commit()
+
+
+#: A statement shaped like an HDFC export: a branch-detail block, the header, transaction
+#: rows, then a summary footer. Header detection has to find the middle band without being
+#: fooled by either end, so the junk at both ends is the point.
+#:
+#: Statements are built in memory rather than checked in. `.gitignore` blocks `*.xlsx` and
+#: `*.csv` at the repo root for a reason - a real statement is the natural fixture and the
+#: easiest thing in the world to commit by accident.
+STATEMENT_HEADER = [
+	"Date",
+	"Narration",
+	"Chq./Ref.No.",
+	"Value Dt",
+	"Withdrawal Amt.",
+	"Deposit Amt.",
+	"Closing Balance",
+]
+
+STATEMENT_ROWS = [
+	# date, narration, ref, value date, withdrawal, deposit, balance
+	["02/04/2026", "UPI-SWIGGY-ORDER-9911", "REF001", "02/04/2026", "250.00", "", "99750.00"],
+	["03/04/2026", "SALARY CREDIT ACME LTD", "REF002", "03/04/2026", "", "85000.00", "184750.00"],
+	# A merchant whose name contains "total". It must be imported, not read as a footer.
+	["04/04/2026", "TOTALENERGIES FUEL PUMP", "REF003", "04/04/2026", "2500.00", "", "182250.00"],
+	# Two genuinely distinct payments, identical but for the balance they leave behind.
+	["05/04/2026", "UPI-CHAI-STALL", "", "05/04/2026", "50.00", "", "182200.00"],
+	["05/04/2026", "UPI-CHAI-STALL", "", "05/04/2026", "50.00", "", "182150.00"],
+	["06/04/2026", "NACH-EMI-HOMELOAN", "REF004", "06/04/2026", "32000.00", "", "150150.00"],
+]
+
+STATEMENT_CLOSING_BALANCE = 150150.0
+
+
+def statement_grid(rows: list[list] | None = None, header: list | None = None) -> list[list]:
+	"""The full grid, junk block and footer included."""
+	return [
+		["HDFC BANK LTD"],
+		["Account Holder", "JANE DOE"],
+		["Address", "12 MG Road, Bengaluru"],
+		["Statement Period", "01/04/2026 to 30/04/2026"],
+		[],
+		list(header if header is not None else STATEMENT_HEADER),
+		*[list(row) for row in (STATEMENT_ROWS if rows is None else rows)],
+		["", "Closing Balance", "", "", "", "", f"{STATEMENT_CLOSING_BALANCE:.2f}"],
+		["*** This is a computer generated statement ***"],
+	]
+
+
+def xlsx_bytes(grid: list[list], sheet_name: str = "Statement") -> bytes:
+	"""Write a grid to an in-memory xlsx workbook."""
+	import io
+
+	import openpyxl
+
+	workbook = openpyxl.Workbook()
+	sheet = workbook.active
+	sheet.title = sheet_name
+	for row in grid:
+		sheet.append(row)
+
+	buffer = io.BytesIO()
+	workbook.save(buffer)
+	return buffer.getvalue()
+
+
+def csv_bytes(grid: list[list], delimiter: str = ",") -> bytes:
+	import csv
+	import io
+
+	buffer = io.StringIO()
+	writer = csv.writer(buffer, delimiter=delimiter)
+	for row in grid:
+		writer.writerow(row)
+
+	return buffer.getvalue().encode("utf-8")
+
+
+def make_import(account: str, content: bytes, file_name: str = "statement.xlsx", **extra) -> str:
+	"""A Wallet Statement Import with the statement really attached to it.
+
+	Attached rather than merely referenced: `get_file_content` treats "is this file
+	attached to this very import" as the thing that authorises reading it, so a fixture
+	that only sets the field would exercise the fallback path instead of the normal one.
+	"""
+	doc = frappe.get_doc({"doctype": "Wallet Statement Import", "account": account, **extra}).insert()
+
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": file_name,
+			"is_private": 1,
+			"content": content,
+			"decode": False,
+			"attached_to_doctype": doc.doctype,
+			"attached_to_name": doc.name,
+			"attached_to_field": "statement_file",
+		}
+	).insert()
+
+	doc.statement_file = file_doc.file_url
+	doc.save()
+	return doc.name
