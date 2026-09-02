@@ -15,16 +15,37 @@ gets a 404 for the PWA and for the app icon on the `/apps` screen.
 ## Server tests
 
 ```bash
-bench --site <site> run-tests --app wallet
+bench --site <site> run-tests --app wallet          # everything
+bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedup
 ```
 
-41 tests, covering the MCP tools and the manual transaction write path
-(`wallet/tests/test_transaction_api.py`). See finding 4 in
-[`audit-2026-08-30.md`](audit-2026-08-30.md) for what is still not covered.
+415 tests, covering every Python module in the app. Where a new test file goes, and the
+conventions the suites follow, are in [`testing.md`](testing.md) — read that before adding
+one.
 
-Fixture builders are shared, in `wallet/tests/fixtures.py` — two suites building an
-account two slightly different ways is how a passing test starts meaning something other
-than what it says.
+| Area | Covered by |
+|---|---|
+| Statement cell parsing, header detection | `wallet/tests/statement/test_parse.py`, `test_detect.py` |
+| Reading a file into a grid, decryption | `wallet/tests/statement/test_reader.py`, `test_decrypt.py` |
+| Transaction fingerprints | `wallet/tests/utils/test_dedup.py` |
+| Categorization rules | `wallet/tests/test_categorization.py` |
+| Wallet Settings defaults | `wallet/tests/test_settings.py` |
+| Balances, net worth, cashflow | `wallet/tests/api/test_balance.py` |
+| The import wizard's endpoints | `wallet/tests/api/test_import_api.py` |
+| The manual transaction write path | `wallet/tests/api/test_transaction_api.py` |
+| Owner isolation | `wallet/tests/test_permissions.py` |
+| Roles, per-user seeding, `as_user` | `wallet/tests/test_install.py` |
+| Setup endpoints, the apps-screen gate | `wallet/tests/api/test_setup.py`, `test_permission.py` |
+| `User.after_insert` | `wallet/tests/doc_events/test_user.py` |
+| Serving the PWA shell and service worker | `wallet/tests/test_pwa.py`, `wallet/tests/www/test_wallet.py` |
+| MCP tools | `wallet/tests/mcp/test_tools.py` |
+| Doctype controllers | `test_<doctype>.py` beside each controller |
+
+Statements are built in memory by `wallet/tests/fixtures.py`, never checked in — see the
+repo convention below.
+
+Four tests in `test_pwa.py` skip unless `yarn build` has run, because the service worker
+they read is build output and build output is gitignored. They report the reason.
 
 ## End-to-end tests
 

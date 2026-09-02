@@ -16,13 +16,7 @@ import frappe
 from frappe.tests import IntegrationTestCase, change_settings, set_user
 
 from wallet.mcp import resolve, tools
-from wallet.tests.fixtures import (
-	make_account,
-	make_category,
-	make_transaction,
-	make_user,
-	purge,
-)
+from wallet.tests.fixtures import commit, make_account, make_category, make_transaction, make_user, purge
 
 
 class TestMCPTools(IntegrationTestCase):
@@ -55,12 +49,12 @@ class TestMCPTools(IntegrationTestCase):
 			# escaped the owner condition, this row would surface in Alice's results.
 			make_transaction(cls.bob_account, "2026-08-02", "In", 4242, "Bob salary")
 
-		frappe.db.commit()
+		commit()
 
 	@classmethod
 	def tearDownClass(cls):
 		purge(cls.alice, cls.bob)
-		frappe.db.commit()
+		commit()
 		super().tearDownClass()
 
 	# --- isolation ------------------------------------------------------------------
