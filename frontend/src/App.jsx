@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Accounts from "./pages/Accounts.jsx";
 import AccountDetail from "./pages/AccountDetail.jsx";
 import Transactions from "./pages/Transactions.jsx";
+import AddTransaction from "./pages/AddTransaction.jsx";
 import Settings from "./pages/Settings.jsx";
 import { useEnsureSetup } from "./lib/api.js";
 
@@ -27,6 +28,7 @@ export default function App() {
 					<Route path="/accounts" element={<Accounts />} />
 					<Route path="/accounts/:name" element={<AccountDetail />} />
 					<Route path="/transactions" element={<Transactions />} />
+					<Route path="/add" element={<AddTransaction />} />
 					<Route path="/settings" element={<Settings />} />
 					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Receipt } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Receipt } from "lucide-react";
 import { useFrappeGetDocList } from "frappe-react-sdk";
 
 import TransactionRow from "../components/TransactionRow.jsx";
@@ -55,7 +56,22 @@ export default function Transactions() {
 	}, [data]);
 
 	return (
-		<Screen title="Activity">
+		<Screen
+			title="Activity"
+			action={
+				// A second way to the same screen as the Add tab. The tab is the one people
+				// learn; this one is here because the moment you notice something is missing
+				// from the list is the moment you want to add it.
+				<Link
+					to="/add"
+					aria-label="Add transaction"
+					className="flex h-10 w-10 items-center justify-center rounded-full"
+					style={{ background: "var(--brand)", color: "var(--surface)" }}
+				>
+					<Plus size={20} />
+				</Link>
+			}
+		>
 			<div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
 				{FILTERS.map((f) => (
 					<button
@@ -83,7 +99,16 @@ export default function Transactions() {
 				<EmptyState
 					icon={Receipt}
 					title="Nothing here yet"
-					hint="Import a bank statement or add a transaction to get started."
+					hint="Import a bank statement, or add a transaction by hand to get started."
+					action={
+						<Link
+							to="/add"
+							className="min-h-[44px] rounded-xl px-4 py-3 text-sm font-semibold"
+							style={{ background: "var(--brand)", color: "var(--surface)" }}
+						>
+							Add a transaction
+						</Link>
+					}
 				/>
 			) : (
 				<>

@@ -18,8 +18,13 @@ gets a 404 for the PWA and for the app icon on the `/apps` screen.
 bench --site <site> run-tests --app wallet
 ```
 
-29 tests, all covering the MCP tools. See finding 4 in
-[`audit-2026-08-30.md`](audit-2026-08-30.md) for what is not covered.
+41 tests, covering the MCP tools and the manual transaction write path
+(`wallet/tests/test_transaction_api.py`). See finding 4 in
+[`audit-2026-08-30.md`](audit-2026-08-30.md) for what is still not covered.
+
+Fixture builders are shared, in `wallet/tests/fixtures.py` — two suites building an
+account two slightly different ways is how a passing test starts meaning something other
+than what it says.
 
 ## End-to-end tests
 
@@ -35,7 +40,7 @@ BASE_URL=http://<site>:8000 yarn test:e2e       # headless
 BASE_URL=http://<site>:8000 yarn test:e2e:ui    # pick and watch individual specs
 ```
 
-37 specs, split by the surface they exercise:
+45 specs, split by the surface they exercise:
 
 | Path | Project | What it covers |
 |---|---|---|
@@ -58,6 +63,10 @@ timezone from System Settings, which only the setup wizard ever fills in, so a s
 never ran it falls back to `get_system_timezone()`'s hard-coded `Asia/Kolkata`. If your
 machine is elsewhere, export `WALLET_E2E_TZ=<the site's zone>`; `auth.setup.ts` fails with
 the exact value to use. CI derives it from the running site.
+
+`pwa/add-transaction.spec.ts` is the only spec that writes, and it deletes what it wrote
+in its `afterEach`. Playwright runs the files alphabetically, so a row left behind there
+would not fail its own test — it would fail `dashboard.spec.ts`, three files later.
 
 Fixture amounts and names are declared once in `e2e/helpers/fixtures.ts` and everything
 else derives from them, so changing a seeded figure cannot leave a stale expectation

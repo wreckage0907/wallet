@@ -67,17 +67,26 @@ export function relativeDay(value) {
 	return formatDate(value);
 }
 
+/**
+ * A local calendar date as "YYYY-MM-DD", the format Frappe stores dates in.
+ *
+ * Deliberately not `toISOString()`: that converts to UTC first, so a transaction filed
+ * from India before 05:30 would be dated yesterday — and dated wrong is worse than no
+ * default at all, because it is the one field a person skims past.
+ */
+export function isoDate(date = new Date()) {
+	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+		date.getDate()
+	).padStart(2, "0")}`;
+}
+
 export function monthRange(offset = 0) {
 	const now = new Date();
 	const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
 	const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
-	const iso = (d) =>
-		`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-			d.getDate()
-		).padStart(2, "0")}`;
 	return {
-		from: iso(start),
-		to: iso(end),
+		from: isoDate(start),
+		to: isoDate(end),
 		label: start.toLocaleString("en-IN", { month: "long" }),
 	};
 }
