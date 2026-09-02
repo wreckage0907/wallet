@@ -15,11 +15,27 @@ gets a 404 for the PWA and for the app icon on the `/apps` screen.
 ## Server tests
 
 ```bash
-bench --site <site> run-tests --app wallet
+bench --site <site> run-tests --app wallet          # everything
+bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedup
 ```
 
-29 tests, all covering the MCP tools. See finding 4 in
-[`audit-2026-08-30.md`](audit-2026-08-30.md) for what is not covered.
+200 tests. Where a new test file goes, and the conventions the suites follow, are in
+[`testing.md`](testing.md) — read that before adding one.
+
+| Area | Covered by |
+|---|---|
+| Statement cell parsing, header detection | `wallet/tests/statement/` |
+| Transaction fingerprints | `wallet/tests/utils/test_dedup.py` |
+| Categorization rules | `wallet/tests/test_categorization.py` |
+| Wallet Settings defaults | `wallet/tests/test_settings.py` |
+| Balances, net worth, cashflow | `wallet/tests/api/test_balance.py` |
+| MCP tools | `wallet/tests/test_mcp_tools.py` |
+| Doctype controllers | `test_<doctype>.py` beside each controller |
+
+Still uncovered: the statement import pipeline (`reader`, `decrypt`,
+`api/import_api.py`, the Wallet Statement Import controller) and the isolation, install
+and serving layer (`permissions.py`, `install.py`, `www/`, `pwa.py`). See finding 4 in
+[`audit-2026-08-30.md`](audit-2026-08-30.md).
 
 ## End-to-end tests
 
