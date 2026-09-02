@@ -44,19 +44,51 @@ def purge(*users: str) -> None:
 
 
 def make_user(email: str, roles: tuple[str, ...] = ("Wallet User",)) -> str:
-	"""A System User with the Wallet role. Idempotent - returns the email either way."""
+	"""A System User with the Wallet role. Idempotent - returns the email either way.
+
+	`in_import` is set for the insert because Frappe throttles user creation at
+	`throttle_user_limit` (60) new users an hour, site-wide, to blunt signup abuse. The
+	suites here create a couple of holders each and a full run goes well past that in
+	minutes, so without this the tail of the suite fails with a bare "Throttled" that has
+	nothing to do with what it was testing. `in_import` is the framework's own escape
+	hatch for exactly this - bulk creation that is not a signup - and it is set only
+	around the insert.
+	"""
 	if not frappe.db.exists("User", email):
-		frappe.get_doc(
-			{
-				"doctype": "User",
-				"email": email,
-				"first_name": email.split("@")[0],
-				"send_welcome_email": 0,
-				"roles": [{"role": role} for role in roles],
-			}
-		).insert(ignore_permissions=True)
+		previous = frappe.flags.in_import
+		frappe.flags.in_import = True
+		try:
+			frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": email,
+					"first_name": email.split("@")[0],
+					"send_welcome_email": 0,
+					"roles": [{"role": role} for role in roles],
+				}
+			).insert(ignore_permissions=True)
+		finally:
+			frappe.flags.in_import = previous
 
 	return email
+
+
+def delete_user(email: str) -> None:
+	"""Remove a user and everything they own, for a suite that needs to watch a *new* one.
+
+	`frappe.delete_doc` rather than `frappe.db.delete`, because a User row has children -
+	`Has Role` among them - and dropping the parent alone leaves those behind. Recreating
+	the same email then fails with "already has the role X", from whichever other app on
+	the site adds a role of its own on user creation.
+	"""
+	purge(email)
+	if frappe.db.exists("User", email):
+		frappe.delete_doc("User", email, force=True, ignore_permissions=True, delete_permanently=True)
+
+	# Belt and braces for children orphaned by an earlier run that removed the parent row
+	# without them: the User is gone, so the delete above is skipped, but the stale rows
+	# still collide with the next insert of the same email.
+	frappe.db.delete("Has Role", {"parenttype": "User", "parent": email})
 
 
 def make_account(

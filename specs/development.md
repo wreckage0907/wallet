@@ -19,8 +19,9 @@ bench --site <site> run-tests --app wallet          # everything
 bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedup
 ```
 
-304 tests. Where a new test file goes, and the conventions the suites follow, are in
-[`testing.md`](testing.md) — read that before adding one.
+402 tests, covering every Python module in the app. Where a new test file goes, and the
+conventions the suites follow, are in [`testing.md`](testing.md) — read that before adding
+one.
 
 | Area | Covered by |
 |---|---|
@@ -31,15 +32,19 @@ bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedu
 | Wallet Settings defaults | `wallet/tests/test_settings.py` |
 | Balances, net worth, cashflow | `wallet/tests/api/test_balance.py` |
 | The import wizard's endpoints | `wallet/tests/api/test_import_api.py` |
-| MCP tools | `wallet/tests/test_mcp_tools.py` |
+| Owner isolation | `wallet/tests/test_permissions.py` |
+| Roles, per-user seeding, `as_user` | `wallet/tests/test_install.py` |
+| Setup endpoints, the apps-screen gate | `wallet/tests/api/test_setup.py`, `test_permission.py` |
+| `User.after_insert` | `wallet/tests/doc_events/test_user.py` |
+| Serving the PWA shell and service worker | `wallet/tests/test_pwa.py`, `wallet/tests/www/test_wallet.py` |
+| MCP tools | `wallet/tests/mcp/test_tools.py` |
 | Doctype controllers | `test_<doctype>.py` beside each controller |
 
 Statements are built in memory by `wallet/tests/fixtures.py`, never checked in — see the
 repo convention below.
 
-Still uncovered: the isolation, install and serving layer (`permissions.py`,
-`install.py`, `www/`, `pwa.py`) and the `User.after_insert` hook. See finding 4 in
-[`audit-2026-08-30.md`](audit-2026-08-30.md).
+Four tests in `test_pwa.py` skip unless `yarn build` has run, because the service worker
+they read is build output and build output is gitignored. They report the reason.
 
 ## End-to-end tests
 
