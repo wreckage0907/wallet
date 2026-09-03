@@ -96,7 +96,7 @@
   </tr>
 </table>
 
-<samp>Wallet has two faces. The PWA at <code>/wallet</code> is for the day to day &mdash; mobile-first, installable, works offline, and it records a transaction in about four taps. The Frappe desk at <code>/desk/wallet</code> is for the heavier work: creating accounts, running imports, editing categorization rules.</samp>
+<samp>Wallet has two faces. The PWA at <code>/wallet</code> is for the day to day &mdash; mobile-first, installable, works offline, and it records a transaction in about four taps. The Frappe desk at <code>/app/wallet</code> is for the heavier work: creating accounts, running imports, editing categorization rules.</samp>
 
 <p align="center">
   <img src="docs/images/desk-workspace.png" width="92%" alt="Wallet desk workspace with shortcuts to accounts, transactions, imports and categories">
@@ -173,7 +173,7 @@
 4. Open it:
 
        /wallet        the PWA
-       /desk/wallet   the desk workspace
+       /app/wallet   the desk workspace
 
 </samp>
 

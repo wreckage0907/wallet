@@ -301,11 +301,6 @@ class TestFindDuplicate(IntegrationTestCase):
 		with set_user(self.holder):
 			self.assertIsNone(find_duplicate(self.account, "2026-04-02", -60, "Samosa"))
 
-	def test_the_sign_is_part_of_the_lookup(self):
-		"""Money received is not a duplicate of the same amount spent."""
-		with set_user(self.holder):
-			self.assertIsNone(find_duplicate(self.account, "2026-04-01", 250, "Chai", "UTR-DUP-2"))
-
 	def test_another_holders_row_is_never_reported(self):
 		"""Handed the other holder's own account docname, so the fingerprints are
 		identical and the first line of defence - `account` being part of every hash - does

@@ -4,7 +4,7 @@ import { Check, ChevronLeft, Loader2, Wallet2 } from "lucide-react";
 import { useSWRConfig } from "frappe-react-sdk";
 
 import { Card, EmptyState, ErrorNote, Field, Screen, Segmented, Select, TextInput } from "../components/ui.jsx";
-import { formatDate, isoDate, money } from "../lib/format.js";
+import { currencySymbol, formatDate, isoDate, money } from "../lib/format.js";
 import { useAccountOptions, useCategoryOptions, useCreateTransaction } from "../lib/api.js";
 
 /**
@@ -57,8 +57,13 @@ export default function AddTransaction() {
 	const navigate = useNavigate();
 	const { mutate } = useSWRConfig();
 
-	const { data: accounts, isLoading: loadingAccounts } = useAccountOptions();
-	const { data: categories } = useCategoryOptions();
+	const {
+		data: accounts,
+		isLoading: loadingAccounts,
+		error: accountsError,
+		mutate: reloadAccounts,
+	} = useAccountOptions();
+	const { data: categories, error: categoriesError } = useCategoryOptions();
 	const { call: create, loading: saving } = useCreateTransaction();
 
 	const [form, setForm] = useState(blankForm);
@@ -96,6 +101,11 @@ export default function AddTransaction() {
 
 	const amount = Number(form.amount);
 	const canSave = form.account && form.posting_date && amount > 0 && !saving;
+
+	// Accounts carry their own currency and the server records the amount in whichever one
+	// the chosen account holds, so a hard-coded ₹ would mislabel a non-INR entry at the one
+	// moment the number is being typed.
+	const currency = accounts?.find((row) => row.name === form.account)?.currency || "INR";
 
 	const submit = async (event) => {
 		event.preventDefault();
@@ -158,6 +168,23 @@ export default function AddTransaction() {
 		);
 	}
 
+	// Before the empty state, not after: a failed request also arrives as no accounts, and
+	// "No accounts yet" is a confident lie about someone who has several.
+	if (accountsError) {
+		return (
+			<Screen title="Add">
+				<ErrorNote error={accountsError} title="Could not load your accounts" />
+				<button
+					onClick={() => reloadAccounts()}
+					className="min-h-[48px] w-full rounded-2xl border text-sm font-semibold"
+					style={{ borderColor: "var(--border)", color: "var(--text)" }}
+				>
+					Try again
+				</button>
+			</Screen>
+		);
+	}
+
 	if (!accounts?.length) {
 		return (
 			<Screen title="Add">
@@ -199,7 +226,7 @@ export default function AddTransaction() {
 					</span>
 					<p className="tnum mt-3 text-2xl font-bold">
 						{txn.direction === "In" ? "+" : "−"}
-						{money(txn.amount)}
+						{money(txn.amount, { currency: txn.currency })}
 					</p>
 					<p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
 						{txn.description || txn.counterparty || "Recorded"} · {txn.account_name}
@@ -209,7 +236,9 @@ export default function AddTransaction() {
 					<p className="mt-4 text-xs" style={{ color: "var(--text-muted)" }}>
 						{txn.account_name} {owes ? "now owes" : "is now"}{" "}
 						<span className="tnum font-semibold" style={{ color: "var(--text)" }}>
-							{money(owes ? Math.abs(saved.account_balance) : saved.account_balance)}
+							{money(owes ? Math.abs(saved.account_balance) : saved.account_balance, {
+								currency: saved.currency,
+							})}
 						</span>
 					</p>
 					{txn.category_name && (
@@ -263,7 +292,7 @@ export default function AddTransaction() {
 
 					<div className="mt-4 flex items-center gap-2">
 						<span className="text-3xl font-bold" style={{ color: "var(--text-muted)" }}>
-							₹
+							{currencySymbol(currency)}
 						</span>
 						<input
 							id="amount"
@@ -322,7 +351,15 @@ export default function AddTransaction() {
 						/>
 					</Field>
 
-					<Field label="Category" htmlFor="category" hint="Leave blank and a rule may fill it in.">
+					<Field
+						label="Category"
+						htmlFor="category"
+						hint={
+							categoriesError
+								? "Categories could not be loaded. Saving without one still works — a rule may fill it in."
+								: "Leave blank and a rule may fill it in."
+						}
+					>
 						<Select
 							id="category"
 							name="category"

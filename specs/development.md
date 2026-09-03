@@ -19,7 +19,7 @@ bench --site <site> run-tests --app wallet          # everything
 bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedup
 ```
 
-415 tests, covering every Python module in the app. Where a new test file goes, and the
+417 tests, covering every Python module in the app. Where a new test file goes, and the
 conventions the suites follow, are in [`testing.md`](testing.md) — read that before adding
 one.
 

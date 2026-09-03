@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import { serverMessage } from "../lib/api.js";
@@ -67,7 +68,9 @@ export function ErrorNote({ error, title = "Could not load" }) {
 	if (!error) return null;
 
 	return (
-		<Card className="text-sm" style={{ borderColor: "var(--color-money-out)" }}>
+		// `role="alert"` because this card is inserted, not revealed: a save that fails
+		// while focus is still on the Save button is otherwise silent to a screen reader.
+		<Card role="alert" className="text-sm" style={{ borderColor: "var(--color-money-out)" }}>
 			<p className="font-semibold" style={{ color: "var(--color-money-out)" }}>
 				{title}
 			</p>
@@ -137,11 +140,43 @@ export function Select({ className = "", children, ...rest }) {
 /**
  * A two-way choice rendered as one control rather than two radios.
  *
- * Radio buttons are the semantically obvious answer and the wrong one on a phone: the hit
- * target is the dot, not the label. These are real buttons in a `radiogroup`, so a screen
- * reader still hears one choice with two options.
+ * Native radio inputs are the semantically obvious answer and the wrong shape on a phone:
+ * the hit target is the dot, not the label. These are buttons in a `radiogroup` instead,
+ * which means the keyboard behaviour a real radio group gets for free has to be built:
+ *
+ * - **one tab stop, not one per option.** Only the selected button is reachable with Tab
+ *   (roving `tabIndex`); Tab from inside the group leaves it, rather than walking through
+ *   options one at a time.
+ * - **arrows move the selection**, wrapping at both ends, with Home and End for the first
+ *   and last. Selection follows focus, which is the expected behaviour for a radio group
+ *   small enough that every option is visible.
  */
 export function Segmented({ value, onChange, options, label }) {
+	const refs = useRef([]);
+	const index = Math.max(
+		options.findIndex((option) => option.value === value),
+		0
+	);
+
+	const moveTo = (next) => {
+		const wrapped = (next + options.length) % options.length;
+		onChange(options[wrapped].value);
+		refs.current[wrapped]?.focus();
+	};
+
+	const onKeyDown = (event) => {
+		const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+
+		if (step) moveTo(index + step);
+		else if (event.key === "Home") moveTo(0);
+		else if (event.key === "End") moveTo(options.length - 1);
+		else return;
+
+		// Only once a key was actually handled: swallowing everything else would break
+		// Tab out of the group and typing into the field below.
+		event.preventDefault();
+	};
+
 	return (
 		<div
 			role="radiogroup"
@@ -149,14 +184,19 @@ export function Segmented({ value, onChange, options, label }) {
 			className="flex gap-1 rounded-xl border p-1"
 			style={{ background: "var(--surface-raised)", borderColor: "var(--border)" }}
 		>
-			{options.map((option) => {
+			{options.map((option, i) => {
 				const active = option.value === value;
 				return (
 					<button
 						key={option.value}
+						ref={(node) => {
+							refs.current[i] = node;
+						}}
 						type="button"
 						role="radio"
 						aria-checked={active}
+						tabIndex={i === index ? 0 : -1}
+						onKeyDown={onKeyDown}
 						onClick={() => onChange(option.value)}
 						className="min-h-[40px] flex-1 rounded-lg text-sm font-semibold transition-colors"
 						style={{
