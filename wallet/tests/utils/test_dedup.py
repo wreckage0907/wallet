@@ -18,7 +18,13 @@ import frappe
 from frappe.tests import IntegrationTestCase, UnitTestCase, set_user
 
 from wallet.tests.fixtures import commit, make_account, make_transaction, make_user, purge
-from wallet.utils.dedup import build_dedup_hash, content_key, normalize, occurrence_index
+from wallet.utils.dedup import (
+	build_dedup_hash,
+	content_key,
+	find_duplicate,
+	normalize,
+	occurrence_index,
+)
 
 ACCOUNT = "acct-one"
 OTHER_ACCOUNT = "acct-two"
@@ -227,3 +233,80 @@ class TestOccurrenceIndex(IntegrationTestCase):
 
 		self.assertEqual(derived, explicit_third)
 		self.assertNotEqual(derived, explicit_first)
+
+
+class TestFindDuplicate(IntegrationTestCase):
+	"""The lookup every manual write path runs before inserting.
+
+	`dedup_hash` is a UNIQUE column, so an entry that fingerprints identically to an
+	existing row raises a MariaDB 1062 - an error code, reaching whoever is holding the
+	phone. This is what turns that into the name of the row it collided with.
+	"""
+
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		cls.holder = make_user("dedup-dup-holder@example.com")
+		cls.other = make_user("dedup-dup-other@example.com")
+		purge(cls.holder, cls.other)
+
+		with set_user(cls.holder):
+			cls.account = make_account("Dup Savings")
+			cls.with_reference = make_transaction(
+				cls.account, "2026-04-01", "Out", 250, "Chai", reference_number="UTR-DUP-1"
+			)
+			cls.without_reference = make_transaction(cls.account, "2026-04-02", "Out", 60, "Samosa")
+
+		with set_user(cls.other):
+			# Same account *name*, same narration, same amount, same day. Only the owner
+			# differs, and `account` is part of every fingerprint - so the hashes cannot
+			# collide even before the query's owner condition is reached.
+			cls.other_account = make_account("Dup Savings")
+			make_transaction(
+				cls.other_account, "2026-04-01", "Out", 250, "Chai", reference_number="UTR-DUP-1"
+			)
+
+		commit()
+
+	@classmethod
+	def tearDownClass(cls):
+		purge(cls.holder, cls.other)
+		commit()
+		super().tearDownClass()
+
+	def test_a_repeated_reference_number_is_found(self):
+		with set_user(self.holder):
+			found = find_duplicate(self.account, "2026-04-01", -250, "Chai", "UTR-DUP-1")
+
+		self.assertIsNotNone(found)
+		self.assertEqual(found["id"], self.with_reference)
+		self.assertEqual(found["posting_date"], "2026-04-01")
+		self.assertEqual(found["amount"], 250)
+
+	def test_the_reference_number_alone_decides_the_top_tier(self):
+		"""Tier one hashes the reference and nothing else, so a re-keyed entry that gets
+		the date and the amount wrong still has to be caught."""
+		with set_user(self.holder):
+			found = find_duplicate(self.account, "2026-09-09", -999, "Something else", "UTR-DUP-1")
+
+		self.assertEqual(found["id"], self.with_reference)
+
+	def test_a_genuinely_new_entry_is_not_a_duplicate(self):
+		with set_user(self.holder):
+			self.assertIsNone(find_duplicate(self.account, "2026-04-03", -75, "Vada pav"))
+
+	def test_a_repeat_without_a_reference_is_allowed_through(self):
+		"""Two identical cash payments on one day are two real transactions. The ordinal
+		tier exists to keep them distinct, and this check must not undo it."""
+		with set_user(self.holder):
+			self.assertIsNone(find_duplicate(self.account, "2026-04-02", -60, "Samosa"))
+
+	def test_another_holders_row_is_never_reported(self):
+		"""Handed the other holder's own account docname, so the fingerprints are
+		identical and the first line of defence - `account` being part of every hash - does
+		not apply. What is left is the owner condition on `frappe.get_list`, which is
+		exactly the thing being tested."""
+		with set_user(self.holder):
+			found = find_duplicate(self.other_account, "2026-04-01", -250, "Chai", "UTR-DUP-1")
+
+		self.assertIsNone(found)

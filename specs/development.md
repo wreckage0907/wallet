@@ -19,7 +19,7 @@ bench --site <site> run-tests --app wallet          # everything
 bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedup
 ```
 
-402 tests, covering every Python module in the app. Where a new test file goes, and the
+417 tests, covering every Python module in the app. Where a new test file goes, and the
 conventions the suites follow, are in [`testing.md`](testing.md) — read that before adding
 one.
 
@@ -32,6 +32,7 @@ one.
 | Wallet Settings defaults | `wallet/tests/test_settings.py` |
 | Balances, net worth, cashflow | `wallet/tests/api/test_balance.py` |
 | The import wizard's endpoints | `wallet/tests/api/test_import_api.py` |
+| The manual transaction write path | `wallet/tests/api/test_transaction_api.py` |
 | Owner isolation | `wallet/tests/test_permissions.py` |
 | Roles, per-user seeding, `as_user` | `wallet/tests/test_install.py` |
 | Setup endpoints, the apps-screen gate | `wallet/tests/api/test_setup.py`, `test_permission.py` |
@@ -60,7 +61,7 @@ BASE_URL=http://<site>:8000 yarn test:e2e       # headless
 BASE_URL=http://<site>:8000 yarn test:e2e:ui    # pick and watch individual specs
 ```
 
-37 specs, split by the surface they exercise:
+45 specs, split by the surface they exercise:
 
 | Path | Project | What it covers |
 |---|---|---|
@@ -83,6 +84,10 @@ timezone from System Settings, which only the setup wizard ever fills in, so a s
 never ran it falls back to `get_system_timezone()`'s hard-coded `Asia/Kolkata`. If your
 machine is elsewhere, export `WALLET_E2E_TZ=<the site's zone>`; `auth.setup.ts` fails with
 the exact value to use. CI derives it from the running site.
+
+`pwa/add-transaction.spec.ts` is the only spec that writes, and it deletes what it wrote
+in its `afterEach`. Playwright runs the files alphabetically, so a row left behind there
+would not fail its own test — it would fail `dashboard.spec.ts`, three files later.
 
 Fixture amounts and names are declared once in `e2e/helpers/fixtures.ts` and everything
 else derives from them, so changing a seeded figure cannot leave a stale expectation

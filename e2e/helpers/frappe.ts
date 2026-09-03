@@ -117,3 +117,28 @@ export async function callPost<T = unknown>(
 
 	return (await response.json()).message as T;
 }
+
+/**
+ * Delete a document.
+ *
+ * Here so a spec that writes can put the site back as it found it. The seeded balances
+ * are asserted to the rupee by `dashboard.spec.ts` and `accounts.spec.ts`, and Playwright
+ * runs the files in alphabetical order — so a transaction left behind by an earlier spec
+ * does not fail its own test, it fails somebody else's, several files later.
+ */
+export async function deleteDoc(
+	request: APIRequestContext,
+	doctype: string,
+	name: string,
+): Promise<void> {
+	const response = await request.delete(
+		`/api/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`,
+		{ headers: writeHeaders() },
+	);
+
+	if (!response.ok()) {
+		throw new Error(
+			`Failed to delete ${doctype} ${name}: ${response.status()} ${await response.text()}`,
+		);
+	}
+}
