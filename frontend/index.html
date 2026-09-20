@@ -2,10 +2,23 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
+		<script>
+			// Frappe UI switches theme via a `.dark` class; mirror the OS preference so the
+			// PWA keeps following the system, same as before the palette moved to Frappe tokens.
+			(function () {
+				var mql = window.matchMedia("(prefers-color-scheme: dark)");
+				var apply = function () {
+					document.documentElement.classList.toggle("dark", mql.matches);
+				};
+				apply();
+				mql.addEventListener("change", apply);
+			})();
+		</script>
 		<!-- viewport-fit=cover for the safe-area insets, but zoom stays enabled: capping
 		     maximum-scale locks out anyone who needs to pinch-zoom to read. -->
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-		<meta name="theme-color" content="#0f172a" />
+		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f8f8" />
+		<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f0f0f" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 		<meta name="apple-mobile-web-app-title" content="Wallet" />

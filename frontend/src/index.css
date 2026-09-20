@@ -2,38 +2,23 @@
 @source "../node_modules/@rtcamp/frappe-ui-react/dist";
 
 /*
- * Wallet is a money app used mostly on a phone, often one-handed and often at night.
- * The palette is dark-first for that reason, with a light variant that follows the OS.
+ * Wallet's palette now comes from Frappe UI. The aliases below map the PWA's original
+ * custom property names onto Frappe UI's semantic tokens so the app reads the same
+ * grays, blues and border colours as the desk. The `.dark` class (toggled from
+ * index.html by `prefers-color-scheme`) flips every token through the library's own
+ * dark overrides, so light and dark both follow the OS.
  */
-@theme {
-	--font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-	--color-ink: #0f172a;
-	--color-money-in: #10b981;
-	--color-money-out: #f43f5e;
-}
-
 :root {
-	--surface: #ffffff;
-	--surface-raised: #f8fafc;
-	--surface-sunken: #f1f5f9;
-	--border: #e2e8f0;
-	--text: #0f172a;
-	--text-muted: #64748b;
-	--brand: #059669;
-	color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--surface: #0f172a;
-		--surface-raised: #1e293b;
-		--surface-sunken: #020617;
-		--border: #334155;
-		--text: #f8fafc;
-		--text-muted: #94a3b8;
-		--brand: #34d399;
-		color-scheme: dark;
-	}
+	--surface: var(--color-surface-white);
+	--surface-raised: var(--color-surface-gray-2);
+	--surface-sunken: var(--color-surface-gray-1);
+	--border: var(--color-outline-gray-2);
+	--text: var(--color-ink-gray-9);
+	--text-muted: var(--color-ink-gray-5);
+	--brand: var(--color-ink-blue-3);
+	--color-money-in: var(--color-ink-green-3);
+	--color-money-out: var(--color-ink-red-4);
+	color-scheme: light dark;
 }
 
 html,
@@ -44,9 +29,10 @@ body,
 
 body {
 	margin: 0;
-	background: var(--surface-sunken);
-	color: var(--text);
-	font-family: var(--font-sans);
+	background: var(--color-surface-gray-1);
+	color: var(--color-ink-gray-9);
+	font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		sans-serif;
 	-webkit-font-smoothing: antialiased;
 	/* Stops iOS rubber-banding the whole page behind the fixed nav. */
 	overscroll-behavior-y: none;
