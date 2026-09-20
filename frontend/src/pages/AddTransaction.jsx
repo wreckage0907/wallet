@@ -310,8 +310,7 @@ export default function AddTransaction() {
 				<Card className="space-y-3">
 					<Field label="Account" htmlFor="account">
 						<Select
-							htmlId="account"
-							size="lg"
+							id="account"
 							value={form.account}
 							onChange={set("account")}
 							options={accounts.map((account) => ({
@@ -326,7 +325,6 @@ export default function AddTransaction() {
 							id="posting_date"
 							name="posting_date"
 							type="date"
-							size="lg"
 							value={form.posting_date}
 							onChange={set("posting_date")}
 						/>
@@ -342,7 +340,6 @@ export default function AddTransaction() {
 							name="description"
 							aria-describedby="description-hint"
 							type="text"
-							size="lg"
 							placeholder="Coffee at the corner shop"
 							value={form.description}
 							onChange={set("description")}
@@ -359,8 +356,8 @@ export default function AddTransaction() {
 						}
 					>
 						<Select
-							htmlId="category"
-							size="lg"
+							id="category"
+							aria-describedby="category-hint"
 							value={form.category}
 							onChange={set("category")}
 							options={[
@@ -393,7 +390,6 @@ export default function AddTransaction() {
 									id="counterparty"
 									name="counterparty"
 									type="text"
-									size="lg"
 									value={form.counterparty}
 									onChange={set("counterparty")}
 								/>
@@ -401,8 +397,7 @@ export default function AddTransaction() {
 
 							<Field label="Payment mode" htmlFor="payment_mode">
 								<Select
-									htmlId="payment_mode"
-									size="lg"
+									id="payment_mode"
 									value={form.payment_mode}
 									onChange={set("payment_mode")}
 									options={[
@@ -422,7 +417,6 @@ export default function AddTransaction() {
 									name="reference_number"
 									aria-describedby="reference_number-hint"
 									type="text"
-									size="lg"
 									value={form.reference_number}
 									onChange={set("reference_number")}
 								/>
@@ -433,7 +427,6 @@ export default function AddTransaction() {
 									id="notes"
 									name="notes"
 									type="text"
-									size="lg"
 									value={form.notes}
 									onChange={set("notes")}
 								/>

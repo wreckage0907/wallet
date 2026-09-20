@@ -2,21 +2,60 @@ import { useRef } from "react";
 
 import {
 	Alert,
-	Button,
+	Button as FrappeButton,
 	DatePicker,
 	LoadingIndicator,
-	Select,
-	TextInput,
 } from "@rtcamp/frappe-ui-react";
 
 import { serverMessage } from "../lib/api.js";
 
-// Re-export the Frappe UI controls the pages reach for directly. Kept in one place so a
-// page never has to know which library the primitives come from.
+// Re-export the Frappe UI controls the pages reach for directly that need no wrapping.
 //
 // `Label` is deliberately not re-exported: the library's Label wraps Base UI's
 // `Field.Label`, which only works inside a `Field.Root` and throws #28 standalone.
-export { Alert, Button, DatePicker, Select, TextInput };
+export { Alert, DatePicker };
+
+/**
+ * The library's interactive controls get thin wrappers instead of a bare re-export, for
+ * two reasons:
+ *
+ * - its largest input/select/button is h-10 (40px), under the app's 44px touch-target
+ *   minimum (see BottomNav), and
+ * - its `Select` does not forward ARIA props such as `aria-describedby` to the native
+ *   `<select>`.
+ *
+ * The wrappers render the native elements styled with Frappe UI tokens, so every
+ * attribute passes straight through and every control clears 44px.
+ */
+const CONTROL =
+	"min-h-[44px] w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 text-base text-ink-gray-9 outline-none";
+
+export function Button({ className = "", ...rest }) {
+	return <FrappeButton {...rest} className={`min-h-[44px] ${className}`} />;
+}
+
+export function TextInput({ className = "", ...rest }) {
+	// `text-base` is not a style choice: iOS Safari zooms the whole page in on focus for
+	// anything under 16px, and never zooms back out.
+	return <input className={`${CONTROL} ${className}`} {...rest} />;
+}
+
+export function Select({ className = "", options = [], placeholder, ...rest }) {
+	return (
+		<select className={`${CONTROL} ${className}`} {...rest}>
+			{placeholder ? <option value="">{placeholder}</option> : null}
+			{options.map((option) => {
+				const { value, label, disabled } =
+					typeof option === "string" ? { value: option, label: option } : option;
+				return (
+					<option key={value} value={value} disabled={disabled}>
+						{label}
+					</option>
+				);
+			})}
+		</select>
+	);
+}
 
 /**
  * A bare Frappe UI surface.
