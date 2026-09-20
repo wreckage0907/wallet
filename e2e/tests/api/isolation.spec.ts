@@ -8,8 +8,10 @@ import {
 	OTHER_SECRET_LABEL,
 	SAVINGS,
 	callGet,
+	callPost,
 	getDocResponse,
 	getList,
+	isoDate,
 	loggedInUser,
 } from '../../helpers';
 
@@ -126,6 +128,33 @@ test.describe('Owner isolation', () => {
 
 			expect(response.ok()).toBeFalsy();
 			expect([403, 404]).toContain(response.status());
+		});
+
+		test('a transaction cannot be posted onto their account', async ({
+			request,
+		}) => {
+			// The PWA's Add screen writes through this endpoint, and the account it posts is
+			// whatever id the caller sends. `doc.insert()` checks only that *this* user may
+			// create a transaction, and Frappe's link validation checks only that the
+			// account row exists — neither notices it belongs to somebody else. The
+			// explicit `frappe.has_permission` in `transaction_api` is the whole defence.
+			await expect(
+				callPost(request, 'wallet.api.transaction_api.create_transaction', {
+					account: otherAccount,
+					posting_date: isoDate(),
+					direction: 'Out',
+					amount: 1,
+					description: 'E2E isolation probe',
+				}),
+			).rejects.toThrow();
+
+			// And nothing landed: a write refused after the insert would be just as bad as
+			// one allowed, since the row would be sitting in the other holder's account.
+			const probes = await getList(request, 'Wallet Transaction', {
+				fields: ['name'],
+				filters: [['description', '=', 'E2E isolation probe']],
+			});
+			expect(probes).toHaveLength(0);
 		});
 
 		test('their balance is not readable by guessing the docname', async ({

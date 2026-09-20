@@ -31,3 +31,16 @@ export function currentMonthLabel(): string {
 		month: 'long',
 	});
 }
+
+/**
+ * A local calendar date as "YYYY-MM-DD", the way the app's own `isoDate` builds one.
+ *
+ * Not `toISOString()`, for the same reason: that converts to UTC first, and the suite
+ * already goes to some trouble (see `timezoneId` in playwright.config.ts) to keep the
+ * browser and the site agreeing on what today is.
+ */
+export function isoDate(date = new Date()): string {
+	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+		date.getDate(),
+	).padStart(2, '0')}`;
+}

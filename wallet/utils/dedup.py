@@ -40,7 +40,7 @@ import hashlib
 import re
 
 import frappe
-from frappe.utils import flt, getdate
+from frappe.utils import flt, getdate, nowdate
 
 _PUNCTUATION = re.compile(r"[^\w\s]", flags=re.UNICODE)
 _WHITESPACE = re.compile(r"\s+")
@@ -127,3 +127,52 @@ def occurrence_index(
 	)
 
 	return sum(1 for row in candidates if normalize(row.description) == description_key)
+
+
+def find_duplicate(
+	account: str,
+	posting_date,
+	signed_amount: float,
+	description: str | None = None,
+	reference_number: str | None = None,
+) -> dict | None:
+	"""The transaction a new entry would collide with, if any.
+
+	`dedup_hash` is a UNIQUE column, so without this check an insert that fingerprints
+	identically raises a raw MariaDB duplicate-key error - which reaches the caller as
+	`(1062, ...)` and tells it nothing it can act on. Every manual write path
+	(`wallet.api.transaction_api`, and the MCP tool through it) checks here first.
+
+	This only catches what the fingerprint actually treats as the same row. With a
+	`reference_number` it is exact. Without one, `build_dedup_hash` falls back to the
+	occurrence ordinal above, which deliberately keeps two identical same-day payments
+	distinct - so repeat cash entries are allowed through, correctly.
+
+	Goes through `frappe.get_list`, so a fingerprint that collides with *another user's*
+	row is not reported: the collision is impossible in the first place, because `account`
+	is part of every hash and accounts are owner-scoped.
+	"""
+	dedup_hash = build_dedup_hash(
+		account=account,
+		posting_date=posting_date or nowdate(),
+		signed_amount=signed_amount,
+		description=description,
+		reference_number=reference_number,
+	)
+
+	existing = frappe.get_list(
+		"Wallet Transaction",
+		filters={"dedup_hash": dedup_hash},
+		fields=["name", "posting_date", "amount", "description"],
+		limit_page_length=1,
+	)
+	if not existing:
+		return None
+
+	row = existing[0]
+	return {
+		"id": row["name"],
+		"posting_date": str(row["posting_date"]),
+		"amount": flt(row["amount"]),
+		"description": row.get("description"),
+	}

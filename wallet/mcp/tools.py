@@ -23,12 +23,12 @@ Every tool returns a dict at the top level: `frappe_mcp` only populates
 
 import frappe
 from frappe import _
-from frappe.utils import flt, nowdate
+from frappe.utils import flt
 
-from wallet.api.balance import get_account_balance, get_overview
+from wallet.api.balance import get_overview
+from wallet.api.transaction_api import create_transaction, normalize_direction
 from wallet.mcp import resolve
 from wallet.settings import get_setting
-from wallet.utils.dedup import build_dedup_hash
 
 #: Cap on `list_transactions`, so a broad query cannot bury the model in rows.
 MAX_LIMIT = 200
@@ -106,7 +106,7 @@ def list_transactions(
 		filters["category"] = resolve.category(category)
 
 	if direction:
-		filters["direction"] = _validate_direction(direction)
+		filters["direction"] = normalize_direction(direction)
 
 	capped = min(max(int(limit), 1), MAX_LIMIT)
 
@@ -327,114 +327,28 @@ def add_transaction(
 			)
 		)
 
-	account_id = resolve.account(account)
-	direction = _validate_direction(direction)
-
-	if flt(amount) <= 0:
-		frappe.throw(_("Amount must be a positive number. Use direction Out for money spent."))
-
-	if duplicate := _find_duplicate(
-		account_id, posting_date, direction, amount, description, reference_number
-	):
-		return {"created": False, "reason": "duplicate", "duplicate_of": duplicate}
-
-	doc = frappe.get_doc(
-		{
-			"doctype": "Wallet Transaction",
-			"account": account_id,
-			"posting_date": posting_date,
-			"direction": direction,
-			"amount": flt(amount),
-			"description": description,
-			"category": resolve.category(category) if category else None,
-			"counterparty": counterparty,
-			"payment_mode": payment_mode,
-			"reference_number": reference_number,
-			"source": "Manual",
-		}
-	)
-	doc.insert()
-
-	categories = resolve.category_names()
-	# As of the transaction's own date when that is in the future: get_account_balance
-	# defaults to today and filters `posting_date <= as_on`, so a future-dated entry would
-	# leave the balance unchanged - and the balance is what makes a misread amount visible,
-	# exactly for the entries most likely to be mis-transcribed.
-	as_on = max(str(doc.posting_date), nowdate())
-	balance = get_account_balance(account_id, as_on=as_on)
-
-	return {
-		"created": True,
-		"transaction": {
-			"id": doc.name,
-			# The canonical name, not the string the caller passed: echoing "demo savings"
-			# back at someone who asked for "demo savings" confirms nothing.
-			"account": resolve.account_names().get(account_id, account),
-			"posting_date": str(doc.posting_date),
-			"direction": doc.direction,
-			"amount": flt(doc.amount),
-			"currency": doc.currency,
-			"description": doc.description,
-			"counterparty": doc.counterparty,
-			"category": categories.get(doc.category),
-		},
-		# The point of returning this: it is where a misread amount becomes visible.
-		"account_balance": flt(balance["balance"]),
-		"balance_as_on": as_on,
-		"currency": balance["currency"],
-	}
-
-
-def _validate_direction(direction: str) -> str:
-	"""Accept any casing, reject anything that is not In or Out."""
-	normalized = (direction or "").strip().capitalize()
-	if normalized not in ("In", "Out"):
-		frappe.throw(_('Direction must be "In" or "Out", not {0}.').format(direction))
-
-	return normalized
-
-
-def _find_duplicate(
-	account_id: str,
-	posting_date: str,
-	direction: str,
-	amount: float,
-	description: str | None,
-	reference_number: str | None,
-) -> dict | None:
-	"""The transaction this one would collide with, if any.
-
-	`dedup_hash` is a UNIQUE column, so without this check an insert that fingerprints
-	identically raises a raw MariaDB duplicate-key error - which reaches the model as
-	`(1062, ...)` and tells it nothing it can act on.
-
-	This only catches what the fingerprint actually treats as the same row. With a
-	`reference_number` it is exact. Without one, `build_dedup_hash` falls back to an
-	occurrence ordinal that deliberately keeps two identical same-day payments distinct
-	(see wallet/utils/dedup.py), so repeat cash entries are allowed through - correctly.
-	"""
-	signed = flt(amount) if direction == "In" else -flt(amount)
-	dedup_hash = build_dedup_hash(
-		account=account_id,
-		posting_date=posting_date or nowdate(),
-		signed_amount=signed,
+	result = create_transaction(
+		account=resolve.account(account),
+		posting_date=posting_date,
+		direction=direction,
+		amount=amount,
 		description=description,
+		category=resolve.category(category) if category else None,
+		counterparty=counterparty,
+		payment_mode=payment_mode,
 		reference_number=reference_number,
 	)
+	if not result["created"]:
+		return result
 
-	existing = frappe.get_list(
-		"Wallet Transaction",
-		filters={"dedup_hash": dedup_hash},
-		fields=["name", "posting_date", "amount", "description"],
-		limit_page_length=1,
-	)
-	if not existing:
-		return None
-
-	row = existing[0]
-	return {
-		"id": row["name"],
-		"posting_date": str(row["posting_date"]),
-		"amount": flt(row["amount"]),
-		"description": row.get("description"),
+	# Ids out, names in: a model cannot carry an `autoname: hash` docname across turns, so
+	# every identifier it is shown is one it could say back. The shape is otherwise exactly
+	# what create_transaction returned.
+	txn = result["transaction"]
+	result["transaction"] = {
+		**{k: v for k, v in txn.items() if k not in ("account_name", "category_name")},
+		"account": txn["account_name"],
+		"category": txn["category_name"],
 	}
+
+	return result

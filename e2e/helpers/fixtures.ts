@@ -33,3 +33,19 @@ export const NET_WORTH = SAVINGS_BALANCE + CARD_BALANCE;
 /** Money in / out for the current month, as the dashboard tiles compute them. */
 export const MONTH_IN = SALARY;
 export const MONTH_OUT = COFFEE + RENT + GROCERIES;
+
+/**
+ * Written by `pwa/add-transaction.spec.ts`, not by the seeder.
+ *
+ * That spec is the only one that writes, and it deletes what it wrote in its `afterEach`
+ * so every balance above stays exactly as `e2e_seed.py` left it. The strings live here
+ * anyway, for the same reason as everything else in this file: the form filler, the
+ * cleanup filter and the assertions all have to agree on one value.
+ */
+export const MANUAL_PREFIX = 'E2E Manual';
+export const MANUAL_DESCRIPTION = `${MANUAL_PREFIX} Chai Stall`;
+export const MANUAL_AMOUNT = 175;
+export const MANUAL_REFERENCE = 'E2E-MANUAL-UTR-0001';
+
+/** What the savings account holds once the spec's entry has landed on it. */
+export const MANUAL_SAVINGS_BALANCE = SAVINGS_BALANCE - MANUAL_AMOUNT;

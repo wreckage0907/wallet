@@ -1,12 +1,17 @@
 import { NavLink } from "react-router-dom";
-import { Home, ListOrdered, Settings2 } from "lucide-react";
+import { Home, ListOrdered, Plus, Settings2 } from "lucide-react";
 
-// Add and Import land in phase 6. They are omitted rather than shown as dead tabs:
-// the wildcard route would bounce both straight back to the dashboard, which reads as
-// a broken button.
+// Import is still desk-only. It is omitted rather than shown as a dead tab: the
+// wildcard route would bounce it straight back to the dashboard, which reads as a
+// broken button.
+//
+// Add is `primary` — a filled disc rather than a line icon. It is the only tab that
+// writes anything, and the one people reach for while standing at a counter, so it is
+// worth the extra weight even though that makes the row visually asymmetric.
 const TABS = [
 	{ to: "/", icon: Home, label: "Home", end: true },
 	{ to: "/transactions", icon: ListOrdered, label: "Activity" },
+	{ to: "/add", icon: Plus, label: "Add", primary: true },
 	{ to: "/settings", icon: Settings2, label: "More" },
 ];
 
