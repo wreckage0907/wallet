@@ -6,7 +6,38 @@
  * `outline-*`). The `.dark` class — toggled from index.html by
  * `prefers-color-scheme` — flips every token through the library's own dark
  * overrides, so light and dark both follow the OS.
+ *
+ * frappe-ui-react also remaps Tailwind's type scale down to its dense desk sizes
+ * (13px body, 14px base, 1.15 line-heights). Those read cramped on a phone and,
+ * for inputs, drop under 16px — which makes iOS zoom the whole page on focus.
+ * Restore Tailwind's scale here; the library's utilities reference these same
+ * variables, so its components pick the change up too.
  */
+:root {
+	--text-xs-size: 0.75rem; /* 12px */
+	--text-sm-size: 0.875rem; /* 14px */
+	--text-base-size: 1rem; /* 16px */
+	--text-lg-size: 1.125rem; /* 18px */
+	--text-xl-size: 1.25rem; /* 20px */
+	--text-2xl-size: 1.5rem; /* 24px */
+	--text-3xl-size: 1.875rem; /* 30px */
+
+	--text-xs-line-height: 1.3333;
+	--text-sm-line-height: 1.4286;
+	--text-base-line-height: 1.5;
+	--text-lg-line-height: 1.5556;
+	--text-xl-line-height: 1.4;
+	--text-2xl-line-height: 1.3333;
+	--text-3xl-line-height: 1.2;
+
+	--text-xs-font-weight: 400;
+	--text-sm-font-weight: 400;
+	--text-base-font-weight: 400;
+	--text-lg-font-weight: 400;
+	--text-xl-font-weight: 400;
+	--text-2xl-font-weight: 400;
+	--text-3xl-font-weight: 400;
+}
 
 html,
 body,
