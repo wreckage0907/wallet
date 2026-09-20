@@ -1,38 +1,42 @@
-@import "tailwindcss";
+@import "./frappe-ui-theme.css";
+@source "../node_modules/@rtcamp/frappe-ui-react/dist";
 
 /*
- * Wallet is a money app used mostly on a phone, often one-handed and often at night.
- * The palette is dark-first for that reason, with a light variant that follows the OS.
+ * The app styles against Frappe UI's semantic tokens (`surface-*`, `ink-*`,
+ * `outline-*`). The `.dark` class — toggled from index.html by
+ * `prefers-color-scheme` — flips every token through the library's own dark
+ * overrides, so light and dark both follow the OS.
+ *
+ * frappe-ui-react also remaps Tailwind's type scale down to its dense desk sizes
+ * (13px body, 14px base, 1.15 line-heights). Those read cramped on a phone and,
+ * for inputs, drop under 16px — which makes iOS zoom the whole page on focus.
+ * Restore Tailwind's scale here; the library's utilities reference these same
+ * variables, so its components pick the change up too.
  */
-@theme {
-	--font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-	--color-ink: #0f172a;
-	--color-money-in: #10b981;
-	--color-money-out: #f43f5e;
-}
-
 :root {
-	--surface: #ffffff;
-	--surface-raised: #f8fafc;
-	--surface-sunken: #f1f5f9;
-	--border: #e2e8f0;
-	--text: #0f172a;
-	--text-muted: #64748b;
-	--brand: #059669;
-	color-scheme: light;
-}
+	--text-xs-size: 0.75rem; /* 12px */
+	--text-sm-size: 0.875rem; /* 14px */
+	--text-base-size: 1rem; /* 16px */
+	--text-lg-size: 1.125rem; /* 18px */
+	--text-xl-size: 1.25rem; /* 20px */
+	--text-2xl-size: 1.5rem; /* 24px */
+	--text-3xl-size: 1.875rem; /* 30px */
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--surface: #0f172a;
-		--surface-raised: #1e293b;
-		--surface-sunken: #020617;
-		--border: #334155;
-		--text: #f8fafc;
-		--text-muted: #94a3b8;
-		--brand: #34d399;
-		color-scheme: dark;
-	}
+	--text-xs-line-height: 1.3333;
+	--text-sm-line-height: 1.4286;
+	--text-base-line-height: 1.5;
+	--text-lg-line-height: 1.5556;
+	--text-xl-line-height: 1.4;
+	--text-2xl-line-height: 1.3333;
+	--text-3xl-line-height: 1.2;
+
+	--text-xs-font-weight: 400;
+	--text-sm-font-weight: 400;
+	--text-base-font-weight: 400;
+	--text-lg-font-weight: 400;
+	--text-xl-font-weight: 400;
+	--text-2xl-font-weight: 400;
+	--text-3xl-font-weight: 400;
 }
 
 html,
@@ -43,9 +47,9 @@ body,
 
 body {
 	margin: 0;
-	background: var(--surface-sunken);
-	color: var(--text);
-	font-family: var(--font-sans);
+	background: var(--color-surface-gray-1);
+	color: var(--color-ink-gray-9);
+	font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	/* Stops iOS rubber-banding the whole page behind the fixed nav. */
 	overscroll-behavior-y: none;

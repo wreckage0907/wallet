@@ -17,10 +17,7 @@ const TABS = [
 
 export default function BottomNav() {
 	return (
-		<nav
-			className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t backdrop-blur"
-			style={{ borderColor: "var(--border)", background: "color-mix(in srgb, var(--surface) 92%, transparent)" }}
-		>
+		<nav className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-outline-gray-2 bg-surface-white">
 			<div className="mx-auto flex w-full max-w-lg items-stretch justify-around px-2">
 				{TABS.map(({ to, icon: Icon, label, end, primary }) => (
 					<NavLink
@@ -28,16 +25,14 @@ export default function BottomNav() {
 						to={to}
 						end={end}
 						// 44px minimum touch target — anything smaller is a miss on a phone.
-						className="flex min-h-[56px] min-w-[56px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors"
-						style={({ isActive }) => ({
-							color: isActive ? "var(--brand)" : "var(--text-muted)",
-						})}
+						className={({ isActive }) =>
+							`flex min-h-[56px] min-w-[56px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors ${
+								isActive ? "text-ink-blue-3" : "text-ink-gray-5"
+							}`
+						}
 					>
 						{primary ? (
-							<span
-								className="flex h-9 w-9 items-center justify-center rounded-full"
-								style={{ background: "var(--brand)", color: "var(--surface)" }}
-							>
+							<span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-white">
 								<Icon size={20} strokeWidth={2.5} />
 							</span>
 						) : (

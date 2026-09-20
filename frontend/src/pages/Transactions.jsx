@@ -4,7 +4,7 @@ import { Plus, Receipt } from "lucide-react";
 import { useFrappeGetDocList } from "frappe-react-sdk";
 
 import TransactionRow from "../components/TransactionRow.jsx";
-import { Card, EmptyState, ErrorNote, Screen, Spinner } from "../components/ui.jsx";
+import { Button, Card, EmptyState, ErrorNote, Screen, Spinner } from "../components/ui.jsx";
 import { money, relativeDay } from "../lib/format.js";
 import { useCategoryNames } from "../lib/api.js";
 
@@ -65,8 +65,7 @@ export default function Transactions() {
 				<Link
 					to="/add"
 					aria-label="Add transaction"
-					className="flex h-10 w-10 items-center justify-center rounded-full"
-					style={{ background: "var(--brand)", color: "var(--surface)" }}
+					className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-500 text-white"
 				>
 					<Plus size={20} />
 				</Link>
@@ -80,12 +79,11 @@ export default function Transactions() {
 							setFilter(f.key);
 							setLimit(PAGE);
 						}}
-						className="min-h-[36px] shrink-0 rounded-full border px-4 text-sm font-medium transition-colors"
-						style={{
-							background: filter === f.key ? "var(--brand)" : "var(--surface)",
-							color: filter === f.key ? "var(--surface)" : "var(--text-muted)",
-							borderColor: filter === f.key ? "var(--brand)" : "var(--border)",
-						}}
+						className={`min-h-[36px] shrink-0 rounded-full border px-4 text-sm font-medium transition-colors ${
+							filter === f.key
+								? "border-blue-500 bg-blue-500 text-white"
+								: "border-outline-gray-2 bg-surface-white text-ink-gray-5"
+						}`}
 					>
 						{f.label}
 					</button>
@@ -103,8 +101,7 @@ export default function Transactions() {
 					action={
 						<Link
 							to="/add"
-							className="min-h-[44px] rounded-xl px-4 py-3 text-sm font-semibold"
-							style={{ background: "var(--brand)", color: "var(--surface)" }}
+							className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-blue-500 px-4 py-2.5 text-base font-medium text-white"
 						>
 							Add a transaction
 						</Link>
@@ -120,19 +117,12 @@ export default function Transactions() {
 						return (
 							<section key={date}>
 								<div className="flex items-baseline justify-between px-1 pt-2 pb-1">
-									<h2 className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-										{relativeDay(date)}
-									</h2>
-									<span className="tnum text-xs" style={{ color: "var(--text-muted)" }}>
-										{money(dayTotal, { compact: true })}
-									</span>
+									<h2 className="text-xs font-semibold text-ink-gray-5">{relativeDay(date)}</h2>
+									<span className="tnum text-xs text-ink-gray-5">{money(dayTotal, { compact: true })}</span>
 								</div>
 								<Card className="!py-1">
 									{rows.map((txn, i) => (
-										<div
-											key={txn.name}
-											style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
-										>
+										<div key={txn.name} className={i === 0 ? "" : "border-t border-outline-gray-2"}>
 											<TransactionRow txn={{ ...txn, category_name: categoryNames.get(txn.category) }} />
 										</div>
 									))}
@@ -142,13 +132,14 @@ export default function Transactions() {
 					})}
 
 					{data?.length >= limit && (
-						<button
+						<Button
+							variant="subtle"
+							size="lg"
+							className="min-h-[44px] w-full"
 							onClick={() => setLimit((n) => n + PAGE)}
-							className="min-h-[44px] w-full rounded-2xl border text-sm font-medium"
-							style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}
 						>
 							Load more
-						</button>
+						</Button>
 					)}
 				</>
 			)}

@@ -29,14 +29,9 @@ export default function Accounts() {
 							<AccountCard key={account.name} account={account} />
 						))}
 					</div>
-					<div
-						className="flex items-center justify-between px-1 pt-3 text-sm"
-						style={{ color: "var(--text-muted)" }}
-					>
+					<div className="flex items-center justify-between px-1 pt-3 text-sm text-ink-gray-5">
 						<span>Combined</span>
-						<span className="tnum font-semibold" style={{ color: "var(--text)" }}>
-							{money(overview?.net_worth)}
-						</span>
+						<span className="tnum font-semibold text-ink-gray-9">{money(overview?.net_worth)}</span>
 					</div>
 				</>
 			)}

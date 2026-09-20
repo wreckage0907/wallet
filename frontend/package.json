@@ -11,6 +11,7 @@
     "copy-html-entry": "cp ../wallet/public/frontend/index.html ../wallet/www/wallet.html"
   },
   "dependencies": {
+    "@rtcamp/frappe-ui-react": "^1.2.0",
     "frappe-react-sdk": "^1.17.0",
     "lucide-react": "^1.30.0",
     "react": "^19.2.7",
