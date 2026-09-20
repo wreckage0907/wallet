@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "@rtcamp/frappe-ui-react/theme";
+@source "../node_modules/@rtcamp/frappe-ui-react/dist";
 
 /*
  * Wallet is a money app used mostly on a phone, often one-handed and often at night.
