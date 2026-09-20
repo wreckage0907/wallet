@@ -12,7 +12,10 @@ function ActionRow({ icon: Icon, label, hint, onClick, busy, danger }) {
 			disabled={busy}
 			className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left disabled:opacity-50"
 		>
-			<Icon size={18} className={busy ? "animate-spin" : ""} style={{ color: danger ? "var(--color-ink-red-4)" : "var(--color-ink-gray-5)" }} />
+			<Icon
+				size={18}
+				className={`${busy ? "animate-spin" : ""} ${danger ? "text-ink-red-4" : "text-ink-gray-5"}`}
+			/>
 			<span className="min-w-0 flex-1">
 				<span className="block text-sm font-medium text-ink-gray-9">{label}</span>
 				{hint && <span className="block text-xs text-ink-gray-5">{hint}</span>}

@@ -2,24 +2,11 @@
 @source "../node_modules/@rtcamp/frappe-ui-react/dist";
 
 /*
- * Wallet's palette now comes from Frappe UI. The aliases below map the PWA's original
- * custom property names onto Frappe UI's semantic tokens so the app reads the same
- * grays, blues and border colours as the desk. The `.dark` class (toggled from
- * index.html by `prefers-color-scheme`) flips every token through the library's own
- * dark overrides, so light and dark both follow the OS.
+ * The app styles against Frappe UI's semantic tokens (`surface-*`, `ink-*`,
+ * `outline-*`). The `.dark` class — toggled from index.html by
+ * `prefers-color-scheme` — flips every token through the library's own dark
+ * overrides, so light and dark both follow the OS.
  */
-:root {
-	--surface: var(--color-surface-white);
-	--surface-raised: var(--color-surface-gray-2);
-	--surface-sunken: var(--color-surface-gray-1);
-	--border: var(--color-outline-gray-2);
-	--text: var(--color-ink-gray-9);
-	--text-muted: var(--color-ink-gray-5);
-	--brand: var(--color-ink-blue-3);
-	--color-money-in: var(--color-ink-green-3);
-	--color-money-out: var(--color-ink-red-4);
-	color-scheme: light dark;
-}
 
 html,
 body,

@@ -25,10 +25,11 @@ export default function BottomNav() {
 						to={to}
 						end={end}
 						// 44px minimum touch target — anything smaller is a miss on a phone.
-						className="flex min-h-[56px] min-w-[56px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors"
-						style={({ isActive }) => ({
-							color: isActive ? "var(--color-ink-blue-3)" : "var(--color-ink-gray-5)",
-						})}
+						className={({ isActive }) =>
+							`flex min-h-[56px] min-w-[56px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors ${
+								isActive ? "text-ink-blue-3" : "text-ink-gray-5"
+							}`
+						}
 					>
 						{primary ? (
 							<span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-white">
