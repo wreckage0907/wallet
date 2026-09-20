@@ -21,7 +21,7 @@ export default function App() {
 	}, [ensureSetup]);
 
 	return (
-		<div className="min-h-full" style={{ background: "var(--surface-sunken)" }}>
+		<div className="min-h-full bg-surface-gray-1">
 			<main className="mx-auto w-full max-w-lg pb-24">
 				<Routes>
 					<Route path="/" element={<Dashboard />} />

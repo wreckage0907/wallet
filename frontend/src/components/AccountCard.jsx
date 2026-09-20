@@ -24,22 +24,19 @@ export default function AccountCard({ account }) {
 	return (
 		<Link
 			to={`/accounts/${encodeURIComponent(account.name)}`}
-			className="flex items-center gap-3 rounded-2xl border p-4 transition-transform active:scale-[0.99]"
-			style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+			className="flex items-center gap-3 rounded-lg border border-outline-gray-2 bg-surface-white p-4 shadow-sm transition-transform active:scale-[0.99]"
 		>
 			<span
-				className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-				style={{ background: account.color || "var(--surface-raised)", color: "var(--text)" }}
+				className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2 text-ink-gray-9"
+				style={{ background: account.color || undefined }}
 			>
 				<Icon size={18} />
 			</span>
 			<div className="min-w-0 flex-1">
-				<p className="truncate text-sm font-semibold">{account.account_name}</p>
-				<p className="truncate text-xs" style={{ color: "var(--text-muted)" }}>
-					{isDebt ? "Outstanding" : account.account_type}
-				</p>
+				<p className="truncate text-sm font-semibold text-ink-gray-9">{account.account_name}</p>
+				<p className="truncate text-xs text-ink-gray-5">{isDebt ? "Outstanding" : account.account_type}</p>
 			</div>
-			<span className="tnum text-sm font-semibold">
+			<span className="tnum text-sm font-semibold text-ink-gray-9">
 				{money(isDebt ? Math.abs(balance) : balance)}
 			</span>
 		</Link>
