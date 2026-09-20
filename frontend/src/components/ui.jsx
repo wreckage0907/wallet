@@ -7,13 +7,15 @@ import {
 	DatePicker,
 	Label,
 	LoadingIndicator,
+	Select,
+	TextInput,
 } from "@rtcamp/frappe-ui-react";
 
 import { serverMessage } from "../lib/api.js";
 
 // Re-export the Frappe UI controls the pages reach for directly. Kept in one place so a
 // page never has to know which library the primitives come from.
-export { Alert, Button, DatePicker, Label };
+export { Alert, Button, DatePicker, Label, Select, TextInput };
 
 /** Frappe UI Card with the PWA's default padding. */
 export function Card({ className = "", ...rest }) {
@@ -94,26 +96,6 @@ export function Field({ label, hint, htmlFor, children }) {
 	);
 }
 
-// Shared by every control below so a select, an input and a button all line up and all
-// clear the 44px minimum touch target. Colours come from the Frappe UI tokens, which is
-// what makes the form follow the OS between light and dark.
-const CONTROL =
-	"min-h-[44px] w-full rounded-lg border border-outline-gray-2 bg-surface-gray-2 px-3 text-base text-ink-gray-9 outline-none";
-
-export function TextInput({ className = "", ...rest }) {
-	// `text-base` is not a style choice: iOS Safari zooms the whole page in on focus for
-	// anything under 16px, and never zooms back out.
-	return <input className={`${CONTROL} ${className}`} {...rest} />;
-}
-
-export function Select({ className = "", children, ...rest }) {
-	return (
-		<select className={`${CONTROL} ${className}`} {...rest}>
-			{children}
-		</select>
-	);
-}
-
 /**
  * A two-way choice rendered as one control rather than two radios.
  *
@@ -175,9 +157,8 @@ export function Segmented({ value, onChange, options, label }) {
 						onKeyDown={onKeyDown}
 						onClick={() => onChange(option.value)}
 						className={`min-h-[40px] flex-1 rounded-md text-sm font-medium transition-colors ${
-							active ? "bg-surface-white text-ink-gray-9 shadow-sm" : "text-ink-gray-5"
+							active ? `bg-surface-white shadow-sm ${option.color || "text-ink-gray-9"}` : "text-ink-gray-5"
 						}`}
-						style={active && option.color ? { color: option.color } : undefined}
 					>
 						{option.label}
 					</button>
