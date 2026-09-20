@@ -3,7 +3,6 @@ import { useRef } from "react";
 import {
 	Alert,
 	Button,
-	Card as FrappeCard,
 	DatePicker,
 	LoadingIndicator,
 	Select,
@@ -19,9 +18,21 @@ import { serverMessage } from "../lib/api.js";
 // `Field.Label`, which only works inside a `Field.Root` and throws #28 standalone.
 export { Alert, Button, DatePicker, Select, TextInput };
 
-/** Frappe UI Card with the PWA's default padding. */
+/**
+ * A bare Frappe UI surface.
+ *
+ * Deliberately not frappe-ui-react's own `Card`: that one is a titled card that always
+ * renders an (empty) heading row and wraps its children in an `overflow-auto` area, and
+ * it paints `bg-white` instead of the semantic surface token, so it never follows dark
+ * mode. These screens need a plain sheet, so we build one from the tokens directly.
+ */
 export function Card({ className = "", ...rest }) {
-	return <FrappeCard className={`p-4 ${className}`} {...rest} />;
+	return (
+		<div
+			className={`rounded-lg border border-outline-gray-2 bg-surface-white p-4 text-ink-gray-9 shadow-sm ${className}`}
+			{...rest}
+		/>
+	);
 }
 
 export function Screen({ title, action, children }) {
