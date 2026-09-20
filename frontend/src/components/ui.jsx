@@ -5,7 +5,6 @@ import {
 	Button,
 	Card as FrappeCard,
 	DatePicker,
-	Label,
 	LoadingIndicator,
 	Select,
 	TextInput,
@@ -15,7 +14,10 @@ import { serverMessage } from "../lib/api.js";
 
 // Re-export the Frappe UI controls the pages reach for directly. Kept in one place so a
 // page never has to know which library the primitives come from.
-export { Alert, Button, DatePicker, Label, Select, TextInput };
+//
+// `Label` is deliberately not re-exported: the library's Label wraps Base UI's
+// `Field.Label`, which only works inside a `Field.Root` and throws #28 standalone.
+export { Alert, Button, DatePicker, Select, TextInput };
 
 /** Frappe UI Card with the PWA's default padding. */
 export function Card({ className = "", ...rest }) {
@@ -82,9 +84,9 @@ export function Field({ label, hint, htmlFor, children }) {
 	return (
 		<div>
 			{label && (
-				<Label htmlFor={htmlFor} className="mb-1 block text-xs text-ink-gray-5">
+				<label htmlFor={htmlFor} className="mb-1 block text-xs font-medium text-ink-gray-5">
 					{label}
-				</Label>
+				</label>
 			)}
 			{children}
 			{hint && (
