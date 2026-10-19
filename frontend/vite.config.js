@@ -63,6 +63,10 @@ export default defineConfig({
 		alias: {
 			"@": path.resolve(__dirname, "src"),
 		},
+		// frappe-ui-react lists React as a regular dependency, so yarn nests a second
+		// copy (19.3.0) alongside the app's own. Two Reacts mean two dispatchers, and the
+		// library's hook-based controls crash with "useContext of null". Force one copy.
+		dedupe: ["react", "react-dom"],
 	},
 	build: {
 		outDir: "../wallet/public/frontend",

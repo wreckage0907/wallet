@@ -9,10 +9,7 @@ export default function AmountText({ value, direction, className = "", compact =
 	const isIn = direction ? direction === "In" : n >= 0;
 
 	return (
-		<span
-			className={`tnum font-semibold ${className}`}
-			style={{ color: isIn ? "var(--color-money-in)" : "var(--color-money-out)" }}
-		>
+		<span className={`tnum font-semibold ${isIn ? "text-ink-green-3" : "text-ink-red-4"} ${className}`}>
 			{isIn ? "+" : "−"}
 			{moneyAbs(n, { compact })}
 		</span>

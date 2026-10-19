@@ -1,9 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Check, ChevronLeft, Loader2, Wallet2 } from "lucide-react";
+import { Check, ChevronLeft, Wallet2 } from "lucide-react";
 import { useSWRConfig } from "frappe-react-sdk";
 
-import { Card, EmptyState, ErrorNote, Field, Screen, Segmented, Select, TextInput } from "../components/ui.jsx";
+import {
+	Button,
+	Card,
+	EmptyState,
+	ErrorNote,
+	Field,
+	Screen,
+	Segmented,
+	Select,
+	Spinner,
+	TextInput,
+} from "../components/ui.jsx";
 import { currencySymbol, formatDate, isoDate, money } from "../lib/format.js";
 import { useAccountOptions, useCategoryOptions, useCreateTransaction } from "../lib/api.js";
 
@@ -20,8 +31,8 @@ import { useAccountOptions, useCategoryOptions, useCreateTransaction } from "../
  */
 
 const DIRECTIONS = [
-	{ value: "Out", label: "Spent", color: "var(--color-money-out)" },
-	{ value: "In", label: "Received", color: "var(--color-money-in)" },
+	{ value: "Out", label: "Spent", color: "text-ink-red-4" },
+	{ value: "In", label: "Received", color: "text-ink-green-3" },
 ];
 
 const PAYMENT_MODES = [
@@ -161,9 +172,7 @@ export default function AddTransaction() {
 	if (loadingAccounts && !accounts) {
 		return (
 			<Screen title="Add">
-				<div className="flex items-center justify-center gap-2 py-12 text-sm" style={{ color: "var(--text-muted)" }}>
-					<Loader2 size={16} className="animate-spin" /> Loading
-				</div>
+				<Spinner />
 			</Screen>
 		);
 	}
@@ -174,13 +183,9 @@ export default function AddTransaction() {
 		return (
 			<Screen title="Add">
 				<ErrorNote error={accountsError} title="Could not load your accounts" />
-				<button
-					onClick={() => reloadAccounts()}
-					className="min-h-[48px] w-full rounded-2xl border text-sm font-semibold"
-					style={{ borderColor: "var(--border)", color: "var(--text)" }}
-				>
+				<Button variant="subtle" size="lg" className="w-full" onClick={() => reloadAccounts()}>
 					Try again
-				</button>
+				</Button>
 			</Screen>
 		);
 	}
@@ -195,8 +200,7 @@ export default function AddTransaction() {
 					action={
 						<a
 							href="/app/wallet-account/new"
-							className="min-h-[44px] rounded-xl px-4 py-3 text-sm font-semibold"
-							style={{ background: "var(--brand)", color: "var(--surface)" }}
+							className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-blue-500 px-4 py-2.5 text-base font-medium text-white"
 						>
 							Add an account
 						</a>
@@ -218,51 +222,44 @@ export default function AddTransaction() {
 		return (
 			<Screen title="Added">
 				<Card className="!p-5 text-center">
-					<span
-						className="mx-auto flex h-12 w-12 items-center justify-center rounded-full"
-						style={{ background: "var(--color-money-in)", color: "var(--surface)" }}
-					>
+					<span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-600 text-white">
 						<Check size={24} />
 					</span>
-					<p className="tnum mt-3 text-2xl font-bold">
+					<p className="tnum mt-3 text-2xl font-semibold text-ink-gray-9">
 						{txn.direction === "In" ? "+" : "−"}
 						{money(txn.amount, { currency: txn.currency })}
 					</p>
-					<p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+					<p className="mt-1 text-sm text-ink-gray-5">
 						{txn.description || txn.counterparty || "Recorded"} · {txn.account_name}
 					</p>
 					{/* The balance is the check digit: a mis-typed amount is invisible on its own
 					    and obvious the moment it lands next to what the account now holds. */}
-					<p className="mt-4 text-xs" style={{ color: "var(--text-muted)" }}>
+					<p className="mt-4 text-xs text-ink-gray-5">
 						{txn.account_name} {owes ? "now owes" : "is now"}{" "}
-						<span className="tnum font-semibold" style={{ color: "var(--text)" }}>
+						<span className="tnum font-semibold text-ink-gray-9">
 							{money(owes ? Math.abs(saved.account_balance) : saved.account_balance, {
 								currency: saved.currency,
 							})}
 						</span>
 					</p>
 					{txn.category_name && (
-						<p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
-							Filed under {txn.category_name}
-						</p>
+						<p className="mt-1 text-xs text-ink-gray-5">Filed under {txn.category_name}</p>
 					)}
 				</Card>
 
 				<div className="grid grid-cols-2 gap-3">
-					<button
-						onClick={addAnother}
-						className="min-h-[48px] rounded-xl border text-sm font-semibold"
-						style={{ borderColor: "var(--border)", color: "var(--text)" }}
-					>
+					<Button variant="subtle" size="lg" className="w-full" onClick={addAnother}>
 						Add another
-					</button>
-					<button
+					</Button>
+					<Button
+						theme="blue"
+						variant="solid"
+						size="lg"
+						className="w-full"
 						onClick={() => navigate("/transactions")}
-						className="min-h-[48px] rounded-xl text-sm font-semibold"
-						style={{ background: "var(--brand)", color: "var(--surface)" }}
 					>
 						View activity
-					</button>
+					</Button>
 				</div>
 			</Screen>
 		);
@@ -274,8 +271,7 @@ export default function AddTransaction() {
 			action={
 				<Link
 					to="/transactions"
-					className="flex h-10 items-center gap-1 text-sm font-medium"
-					style={{ color: "var(--text-muted)" }}
+					className="flex h-10 items-center gap-1 text-sm font-medium text-ink-gray-5"
 				>
 					<ChevronLeft size={18} /> Cancel
 				</Link>
@@ -291,9 +287,7 @@ export default function AddTransaction() {
 					/>
 
 					<div className="mt-4 flex items-center gap-2">
-						<span className="text-3xl font-bold" style={{ color: "var(--text-muted)" }}>
-							{currencySymbol(currency)}
-						</span>
+						<span className="text-3xl font-semibold text-ink-gray-5">{currencySymbol(currency)}</span>
 						<input
 							id="amount"
 							name="amount"
@@ -308,21 +302,22 @@ export default function AddTransaction() {
 							onChange={(event) =>
 								setForm((f) => ({ ...f, amount: event.target.value.replace(/[^\d.]/g, "") }))
 							}
-							className="tnum min-h-[52px] w-full bg-transparent text-4xl font-bold outline-none"
-							style={{ color: "var(--text)" }}
+							className="tnum min-h-[52px] w-full bg-transparent text-4xl font-semibold text-ink-gray-9 outline-none"
 						/>
 					</div>
 				</Card>
 
 				<Card className="space-y-3">
 					<Field label="Account" htmlFor="account">
-						<Select id="account" name="account" value={form.account} onChange={set("account")}>
-							{accounts.map((account) => (
-								<option key={account.name} value={account.name}>
-									{account.account_name}
-								</option>
-							))}
-						</Select>
+						<Select
+							id="account"
+							value={form.account}
+							onChange={set("account")}
+							options={accounts.map((account) => ({
+								value: account.name,
+								label: account.account_name,
+							}))}
+						/>
 					</Field>
 
 					<Field label="Date" htmlFor="posting_date">
@@ -362,18 +357,17 @@ export default function AddTransaction() {
 					>
 						<Select
 							id="category"
-							name="category"
 							aria-describedby="category-hint"
 							value={form.category}
 							onChange={set("category")}
-						>
-							<option value="">Uncategorized</option>
-							{categoryOptions.map((category) => (
-								<option key={category.name} value={category.name}>
-									{category.category_name}
-								</option>
-							))}
-						</Select>
+							options={[
+								{ value: "", label: "Uncategorized" },
+								...categoryOptions.map((category) => ({
+									value: category.name,
+									label: category.category_name,
+								})),
+							]}
+						/>
 					</Field>
 				</Card>
 
@@ -384,14 +378,13 @@ export default function AddTransaction() {
 						type="button"
 						onClick={() => setShowMore((open) => !open)}
 						aria-expanded={showMore}
-						className="min-h-[48px] w-full px-4 text-left text-sm font-medium"
-						style={{ color: "var(--text-muted)" }}
+						className="min-h-[48px] w-full px-4 text-left text-sm font-medium text-ink-gray-5"
 					>
 						{showMore ? "Fewer details" : "More details"}
 					</button>
 
 					{showMore && (
-						<div className="space-y-3 border-t px-4 py-4" style={{ borderColor: "var(--border)" }}>
+						<div className="space-y-3 border-t border-outline-gray-2 px-4 py-4">
 							<Field label="Paid to / from" htmlFor="counterparty">
 								<TextInput
 									id="counterparty"
@@ -405,17 +398,13 @@ export default function AddTransaction() {
 							<Field label="Payment mode" htmlFor="payment_mode">
 								<Select
 									id="payment_mode"
-									name="payment_mode"
 									value={form.payment_mode}
 									onChange={set("payment_mode")}
-								>
-									<option value="">Not recorded</option>
-									{PAYMENT_MODES.map((mode) => (
-										<option key={mode} value={mode}>
-											{mode}
-										</option>
-									))}
-								</Select>
+									options={[
+										{ value: "", label: "Not recorded" },
+										...PAYMENT_MODES.map((mode) => ({ value: mode, label: mode })),
+									]}
+								/>
 							</Field>
 
 							<Field
@@ -434,7 +423,13 @@ export default function AddTransaction() {
 							</Field>
 
 							<Field label="Notes" htmlFor="notes">
-								<TextInput id="notes" name="notes" type="text" value={form.notes} onChange={set("notes")} />
+								<TextInput
+									id="notes"
+									name="notes"
+									type="text"
+									value={form.notes}
+									onChange={set("notes")}
+								/>
 							</Field>
 						</div>
 					)}
@@ -442,14 +437,18 @@ export default function AddTransaction() {
 
 				{error && <ErrorNote error={error} title="Not saved" />}
 
-				<button
+				<Button
 					type="submit"
+					theme="blue"
+					variant="solid"
+					size="xl"
+					className="w-full"
+					loading={saving}
+					loadingText="Saving…"
 					disabled={!canSave}
-					className="min-h-[52px] w-full rounded-2xl text-base font-semibold transition-opacity disabled:opacity-40"
-					style={{ background: "var(--brand)", color: "var(--surface)" }}
 				>
-					{saving ? "Saving…" : `Save ${form.direction === "In" ? "income" : "spend"}`}
-				</button>
+					Save {form.direction === "In" ? "income" : "spend"}
+				</Button>
 			</form>
 		</Screen>
 	);

@@ -31,17 +31,19 @@ export default function Dashboard() {
 	return (
 		<Screen title="Wallet">
 			<Card className="!p-5">
-				<p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-					Net worth
-				</p>
-				<p className="tnum mt-1 text-3xl font-bold">{money(overview?.net_worth)}</p>
-				<div className="mt-4 flex gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
+				<p className="text-xs font-medium uppercase tracking-wide text-ink-gray-5">Net worth</p>
+				<p className="tnum mt-1 text-3xl font-semibold text-ink-gray-9">{money(overview?.net_worth)}</p>
+				<div className="mt-4 flex gap-4 text-xs text-ink-gray-5">
 					<span>
-						Assets <span className="tnum font-semibold" style={{ color: "var(--text)" }}>{money(overview?.assets, { compact: true })}</span>
+						Assets{" "}
+						<span className="tnum font-semibold text-ink-gray-9">{money(overview?.assets, { compact: true })}</span>
 					</span>
 					{overview?.liabilities > 0 && (
 						<span>
-							Owed <span className="tnum font-semibold" style={{ color: "var(--text)" }}>{money(overview.liabilities, { compact: true })}</span>
+							Owed{" "}
+							<span className="tnum font-semibold text-ink-gray-9">
+								{money(overview.liabilities, { compact: true })}
+							</span>
 						</span>
 					)}
 				</div>
@@ -49,7 +51,7 @@ export default function Dashboard() {
 					// Balances in other currencies are deliberately not folded in: converting
 					// them would need a rate we do not have, and adding them raw would produce
 					// a number that is wrong in every currency.
-					<p className="mt-3 text-xs" style={{ color: "var(--text-muted)" }}>
+					<p className="mt-3 text-xs text-ink-gray-5">
 						{overview.currency} accounts only.{" "}
 						{overview.by_currency
 							.filter((b) => b.currency !== overview.currency)
@@ -62,23 +64,27 @@ export default function Dashboard() {
 
 			<div className="grid grid-cols-2 gap-3">
 				<Card>
-					<span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-						<ArrowDownLeft size={14} style={{ color: "var(--color-money-in)" }} /> In · {month.label}
+					<span className="flex items-center gap-1.5 text-xs text-ink-gray-5">
+						<ArrowDownLeft size={14} className="text-ink-green-3" /> In · {month.label}
 					</span>
-					<p className="tnum mt-1 text-lg font-bold">{money(cash?.money_in, { compact: true })}</p>
+					<p className="tnum mt-1 text-lg font-semibold text-ink-gray-9">
+						{money(cash?.money_in, { compact: true })}
+					</p>
 				</Card>
 				<Card>
-					<span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-						<ArrowUpRight size={14} style={{ color: "var(--color-money-out)" }} /> Out · {month.label}
+					<span className="flex items-center gap-1.5 text-xs text-ink-gray-5">
+						<ArrowUpRight size={14} className="text-ink-red-4" /> Out · {month.label}
 					</span>
-					<p className="tnum mt-1 text-lg font-bold">{money(cash?.money_out, { compact: true })}</p>
+					<p className="tnum mt-1 text-lg font-semibold text-ink-gray-9">
+						{money(cash?.money_out, { compact: true })}
+					</p>
 				</Card>
 			</div>
 
 			<section className="pt-2">
 				<div className="mb-2 flex items-center justify-between">
-					<h2 className="text-sm font-semibold">Accounts</h2>
-					<Link to="/accounts" className="text-xs font-medium" style={{ color: "var(--brand)" }}>
+					<h2 className="text-sm font-semibold text-ink-gray-9">Accounts</h2>
+					<Link to="/accounts" className="text-xs font-medium text-ink-blue-3">
 						See all
 					</Link>
 				</div>
@@ -100,18 +106,17 @@ export default function Dashboard() {
 			{recent?.length > 0 && (
 				<section className="pt-2">
 					<div className="mb-1 flex items-center justify-between">
-						<h2 className="text-sm font-semibold">Recent</h2>
-						<Link to="/transactions" className="text-xs font-medium" style={{ color: "var(--brand)" }}>
+						<h2 className="text-sm font-semibold text-ink-gray-9">Recent</h2>
+						<Link to="/transactions" className="text-xs font-medium text-ink-blue-3">
 							See all
 						</Link>
 					</div>
 					<Card className="!py-1">
 						{recent.map((txn, i) => (
-							<div
-								key={txn.name}
-								style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
-							>
-								<TransactionRow txn={{ ...txn, category_name: categoryNames.get(txn.category) || relativeDay(txn.posting_date) }} />
+							<div key={txn.name} className={i === 0 ? "" : "border-t border-outline-gray-2"}>
+								<TransactionRow
+									txn={{ ...txn, category_name: categoryNames.get(txn.category) || relativeDay(txn.posting_date) }}
+								/>
 							</div>
 						))}
 					</Card>
