@@ -136,8 +136,8 @@
 **📝 Prerequisites**
 
 1. **Frappe Bench** with a **v16** site
-2. **Python 3.11+**
-3. **Node 18+** and **yarn**
+2. **Python 3.14** (what Frappe v16 itself requires)
+3. **Node 24+** and **yarn**
 4. **MariaDB** (via bench)
 5. `msoffcrypto-tool` — installed by bench from `pyproject.toml`
 

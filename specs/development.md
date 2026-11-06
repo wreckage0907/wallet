@@ -117,10 +117,10 @@ run one; `frontend.yml` then asserts the output exists rather than trusting the 
 **The Playwright job is not sharded.** Every shard would pay for its own `bench init` and
 `new-site`, which costs far more than the tests it would save.
 
-Python is pinned to 3.14 to match `requires-python` in `pyproject.toml` — `bench get-app`
-runs `pip install -e .`, which refuses anything older. See finding 3 in
-[`audit-2026-08-30.md`](audit-2026-08-30.md); if that floor moves, move the workflows with
-it.
+Every workflow that sets up Python pins 3.14 — `requires-python` in `pyproject.toml`, Frappe
+v16's own floor (`>=3.14,<3.15`). `bench get-app` runs `pip install -e .`, which refuses
+anything older. See finding 3 in [`audit-2026-08-30.md`](audit-2026-08-30.md); if Frappe's
+floor moves, move `pyproject.toml` and every workflow that sets up Python with it.
 
 ## Pre-commit
 

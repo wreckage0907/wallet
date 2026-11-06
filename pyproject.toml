@@ -4,6 +4,8 @@ authors = [
     { name = "girish.raghav2004@gmail.com", email = "girish.raghav2004@gmail.com"}
 ]
 description = "Personal Finance Management"
+# Frappe v16 itself declares requires-python = ">=3.14,<3.15", so this is the floor of the
+# framework, not a choice of ours. A bench that can run Frappe v16 already has it.
 requires-python = ">=3.14"
 readme = "README.md"
 dynamic = ["version"]
