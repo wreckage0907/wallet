@@ -18,7 +18,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from wallet.statement.decrypt import OLE2_MAGIC, StatementDecryptionError, decrypt, is_encrypted
-from wallet.tests.fixtures import xlsx_bytes
+from wallet.tests.fixtures import xls_bytes, xlsx_bytes
 
 
 class TestIsEncrypted(IntegrationTestCase):
@@ -35,6 +35,14 @@ class TestIsEncrypted(IntegrationTestCase):
 	def test_a_csv_is_not(self):
 		self.assertFalse(is_encrypted(b"Date,Narration\n"))
 
+	def test_a_plain_legacy_xls_is_not(self):
+		"""Every Excel 97-2003 workbook is an OLE2 document, encrypted or not, so the magic
+		alone used to refuse every unprotected .xls as "password protected"."""
+		content = xls_bytes([["Date", "Narration"]])
+
+		self.assertEqual(content[:8], OLE2_MAGIC)
+		self.assertFalse(is_encrypted(content))
+
 	def test_an_empty_file_is_not(self):
 		"""Slicing past the end is fine in Python; this pins that it stays fine."""
 		self.assertFalse(is_encrypted(b""))
@@ -45,6 +53,11 @@ class TestDecrypt(IntegrationTestCase):
 		"""Every import goes through here, so the common case has to be a no-op - the same
 		bytes back, not a re-encoded copy."""
 		content = xlsx_bytes([["Date", "Narration"]])
+
+		self.assertIs(decrypt(content), content)
+
+	def test_a_plain_legacy_xls_passes_through_untouched(self):
+		content = xls_bytes([["Date", "Narration"]])
 
 		self.assertIs(decrypt(content), content)
 

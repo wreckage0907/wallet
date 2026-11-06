@@ -21,15 +21,37 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 	else window.addEventListener("load", register, { once: true });
 }
 
-createRoot(document.getElementById("root")).render(
-	<StrictMode>
-		<FrappeProvider
-			socketPort={import.meta.env.VITE_SOCKET_PORT}
-			swrConfig={{ revalidateOnFocus: false, shouldRetryOnError: false }}
-		>
-			<BrowserRouter basename="/wallet">
-				<App />
-			</BrowserRouter>
-		</FrappeProvider>
-	</StrictMode>
+// Under `yarn dev` Vite serves index.html as-is, so window.csrf_token is still the
+// unrendered "{{ frappe.session.csrf_token }}". frappe-react-sdk only recognises the
+// literal "{{ csrf_token }}" as a placeholder, so it would send that text as the token
+// and every POST would fail with "Invalid Request". Fetch the session's real token from
+// the dev boot endpoint instead (over GET, which Frappe does not CSRF-check).
+async function loadDevCsrfToken() {
+	window.csrf_token = undefined;
+	try {
+		const response = await fetch("/api/method/wallet.www.wallet.get_context_for_dev", {
+			credentials: "include",
+		});
+		const { message } = await response.json();
+		if (message?.csrf_token) window.csrf_token = message.csrf_token;
+	} catch (error) {
+		console.warn("Could not fetch a CSRF token for the dev server", error);
+	}
+}
+
+const ready = import.meta.env.DEV ? loadDevCsrfToken() : Promise.resolve();
+
+ready.then(() =>
+	createRoot(document.getElementById("root")).render(
+		<StrictMode>
+			<FrappeProvider
+				socketPort={import.meta.env.VITE_SOCKET_PORT}
+				swrConfig={{ revalidateOnFocus: false, shouldRetryOnError: false }}
+			>
+				<BrowserRouter basename="/wallet">
+					<App />
+				</BrowserRouter>
+			</FrappeProvider>
+		</StrictMode>
+	)
 );

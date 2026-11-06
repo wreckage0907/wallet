@@ -5,8 +5,8 @@
 
 The boot payload the PWA shell is rendered with. Small, but it is the first thing every
 session touches, and two of its properties matter more than their size suggests: a Guest
-must never get the shell, and the dev-only boot endpoint must stay dev-only - it is
-`allow_guest=True`, so `developer_mode` is the only thing standing in front of it.
+must never get the shell, and the dev-only boot endpoint must stay dev-only and closed to
+guests - it hands out the session's CSRF token.
 """
 
 import frappe
@@ -81,7 +81,7 @@ class TestGetContextForDev(IntegrationTestCase):
 	template, so the shell has to fetch its boot payload instead."""
 
 	def test_it_is_refused_when_developer_mode_is_off(self):
-		"""It is `allow_guest=True`, so this check is the only thing in front of it."""
+		"""It returns the session's CSRF token, so it must not exist outside development."""
 		previous = frappe.conf.developer_mode
 		frappe.conf.developer_mode = 0
 		try:
@@ -90,12 +90,35 @@ class TestGetContextForDev(IntegrationTestCase):
 		finally:
 			frappe.conf.developer_mode = previous
 
-	def test_it_returns_the_boot_payload_in_developer_mode(self):
+	def dev_boot(self):
 		previous = frappe.conf.developer_mode
 		frappe.conf.developer_mode = 1
 		try:
-			boot = get_context_for_dev()
+			return get_context_for_dev()
 		finally:
 			frappe.conf.developer_mode = previous
 
+	def test_it_returns_the_boot_payload_in_developer_mode(self):
+		boot = self.dev_boot()
+
 		self.assertEqual(boot["user"], frappe.session.user)
+
+	def test_it_carries_the_sessions_csrf_token(self):
+		"""Under Vite the template is never rendered, so this is the only way the shell
+		gets a token - and without one every POST fails with "Invalid Request"."""
+		user = make_user("dev-boot-holder@example.com")
+		commit()
+
+		with set_user(user):
+			boot = self.dev_boot()
+			self.assertTrue(boot["csrf_token"])
+			self.assertEqual(boot["csrf_token"], frappe.session.data.csrf_token)
+
+	def test_it_is_closed_to_guests(self):
+		"""Same as the rendered page. A guest has no session token to hand out."""
+		self.assertNotIn(get_context_for_dev, frappe.guest_methods)
+
+	def test_it_is_callable_over_get(self):
+		"""The shell has no token yet, and a POST without one is refused before the method
+		ever runs. GETs are not CSRF-checked."""
+		self.assertIn("GET", frappe.allowed_http_methods_for_whitelisted_func[get_context_for_dev])

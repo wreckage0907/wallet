@@ -13,7 +13,7 @@ import io
 import frappe
 from frappe import _
 
-from wallet.statement.decrypt import decrypt
+from wallet.statement.decrypt import OLE2_MAGIC, decrypt
 
 #: Statements longer than this are almost certainly not statements.
 MAX_SCAN_ROWS = 100_000
@@ -33,7 +33,9 @@ def read_grid(
 	if extension == "csv" or (not extension and content[:2] != b"PK"):
 		return _read_csv(content), "csv"
 
-	if extension == "xls" and content[:2] != b"PK":
+	# Routed by content, not extension: banks misname files both ways, and a decrypted
+	# legacy .xls is still an OLE2 document whatever the upload was called.
+	if content[:8] == OLE2_MAGIC:
 		return _read_xls(content, sheet_name)
 
 	return _read_xlsx(content, sheet_name)

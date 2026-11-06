@@ -25,7 +25,7 @@ from wallet.settings import get_setting
 from wallet.statement import detect
 from wallet.statement.parse import detect_dayfirst, parse_amount, parse_date
 from wallet.statement.reader import read_grid
-from wallet.utils.dedup import build_dedup_hash, content_key, occurrence_index
+from wallet.utils.dedup import build_dedup_hash, content_key
 
 
 class WalletStatementImport(Document):
@@ -322,9 +322,14 @@ class WalletStatementImport(Document):
 		seen_in_file: set[str] = set()
 
 		# Occurrence ordinals for the weakest dedup tier (no reference number, no running
-		# balance) must count rows *within this file* as well as those already stored.
-		# Deriving them from a database count alone gave two identical rows in the same
-		# statement the same ordinal, the same hash, and silently dropped the second.
+		# balance) count rows *within this file only*. The nth identical row of a day is
+		# then the same nth row in every statement that covers that day, so a re-import
+		# reproduces the same hashes and is recognised.
+		#
+		# Both alternatives are wrong. A database count alone gives two identical rows in
+		# one statement the same ordinal and drops the second. Adding the database count
+		# to the in-file one shifts every ordinal on a re-import, so each row hashes as
+		# unseen and the whole statement is inserted again.
 		occurrences: dict[tuple, int] = {}
 
 		for row in staged:
@@ -336,10 +341,8 @@ class WalletStatementImport(Document):
 
 			if not row.get("reference_number") and row.get("balance_after") is None:
 				key = content_key(self.account, row["posting_date"], signed, row.get("description"))
-				if key not in occurrences:
-					occurrences[key] = occurrence_index(*key)
-				occurrence = occurrences[key]
-				occurrences[key] += 1
+				occurrence = occurrences.get(key, 0)
+				occurrences[key] = occurrence + 1
 
 			row["dedup_hash"] = build_dedup_hash(
 				account=self.account,
