@@ -62,7 +62,7 @@
     <td width="50%" valign="top"><samp>
       <b>An MCP server, with writes off by default</b>
       <br><br>
-      Ask your AI assistant what you spent on groceries last month, or have it record a cash payment. Five tools, one endpoint, and a write gate that lives inside the tool rather than in the URL.
+      Ask your AI assistant what you spent on groceries last month, or have it record a cash payment. Built on Frappe's own MCP server, with a write gate enforced on every Wallet document rather than in one tool.
     </samp></td>
   </tr>
 </table>
@@ -145,8 +145,7 @@
 
 **🔮 Optional**
 
-- `frappe-mcp` — only for the MCP server, installed by hand
-- `developer_mode` — only for MCP client self-registration
+- `Enable MCP` in System Settings (on by default) — only for the MCP server
 
 </samp>
 
@@ -215,7 +214,7 @@
 | `Wallet Statement Import` | one import, with its staged rows as a child table |
 | `Wallet Statement Format` | a remembered column layout for a bank's export |
 | `Wallet Bank` | shared bank reference data |
-| `Wallet Settings` | site-wide defaults, including the MCP write gate |
+| `Wallet Settings` | site-wide defaults, including the site half of the MCP write gate |
 
 Account and category names are unique **per user**, not globally — both doctypes are
 `autoname: hash` precisely so two people can each have a "HDFC Savings" and a "Groceries".
@@ -303,31 +302,51 @@ catches a **manual entry that duplicates an imported row**, and survives deletin
 
 <samp>
 
-Wallet can act as an [MCP](https://modelcontextprotocol.io) server, so an AI agent can read
-your accounts and transactions and record new ones.
+Wallet works with Frappe's built-in [MCP](https://modelcontextprotocol.io) server, so an AI
+agent can read your accounts and transactions and record new ones. There is nothing extra
+to install: the server ships with Frappe v16.53 and later, one endpoint per site.
 
 ```
-/api/method/wallet.mcp.handle_mcp
+/api/v2/mcp
 ```
 
-| Tool | | |
+The agent gets Frappe's generic tools (`list_documents`, `create_document`, `call_method`,
+…), which go through the same permission hooks as everything else — owner isolation
+included. On top of those, Wallet adds methods shaped for a model, reached with
+`call_method`:
+
+| Method `wallet.mcp.tools.` | | |
 |---|---|---|
 | `list_accounts` | balances, including what is owed on a credit card | 🔍 read |
 | `list_transactions` | filter by account, date, category, direction, or free text | 🔍 read |
-| `list_categories` | the names the other tools accept | 🔍 read |
+| `list_categories` | the names the other methods accept | 🔍 read |
 | `get_spending_summary` | money in, money out and spend per category over a period | 🔍 read |
 | `add_transaction` | record one transaction | ✍️ write |
 
-One endpoint, not one per access level. **Writes are off by default** and enabled with
-`Allow MCP Writes` in Wallet Settings — checked inside the tool body, so it holds however
-the endpoint is reached.
+They take account and category *names*, not hash ids. The reads are whitelisted for GET
+only, so the server runs them read-only and rolls them back. Agents find all of them with
+`search_methods`.
 
-Point your MCP client at the endpoint URL; it registers itself, opens your normal Frappe
+**Writes are off by default, twice over.** An agent can change your Wallet data only while
+both switches are on:
+
+1. `Allow MCP Writes` in Wallet Settings, which the site's administrator controls.
+2. **Let AI agents make changes**, under *More* in the app, which only you can turn on
+   for yourself.
+
+The gate is enforced on every Wallet document, not in one tool, so it holds for the generic
+`create_document` / `update_document` / `delete_document` as well. An agent cannot flip
+either switch: Wallet Settings is gated too, and your own opt-in refuses any change made
+over MCP.
+
+Still pointing at the old `/api/method/wallet.mcp.handle_mcp`? It answers with a JSON-RPC
+error that names the new URL.
+
+Point your MCP client at the endpoint URL. It registers itself, opens your normal Frappe
 login, and receives a token once you approve. There is no API key to copy.
 
 ```bash
-claude mcp add --transport http wallet \
-	https://<your-site>/api/method/wallet.mcp.handle_mcp
+claude mcp add --transport http wallet https://<your-site>/api/v2/mcp
 ```
 
 </samp>
@@ -337,35 +356,26 @@ claude mcp add --transport http wallet \
 <br>
 <samp>
 
-`frappe-mcp` is not in `pyproject.toml`: it pins `Werkzeug==3.1.3` and `pydantic~=2.11.7`
-against Frappe's newer pins, so a normal resolve would downgrade Werkzeug and break the
-bench. Install it without its dependencies instead:
+Requires Frappe **v16.53.0** or later. Nothing else needs configuring:
 
-```bash
-./env/bin/pip install jsonschema
-./env/bin/pip install --no-deps \
-	git+https://github.com/frappe/mcp.git@11d5076b1bf4483b2ff6751a13e0736f5396b1e6
-bench restart
-```
+- `System Settings → Enable MCP` is on by default. `Agent Instructions` there is sent to
+  every client that connects, a good place to say "personal finances live in Wallet; use
+  `wallet.mcp.tools`".
+- `OAuth Settings` enables dynamic client registration and the `.well-known` metadata
+  endpoints by default, and loopback redirect URIs (`http://localhost:<port>/…`) are
+  accepted without `developer_mode`.
 
-The commit is pinned deliberately — the library ships breaking changes without notice.
+Connect as yourself, never as Administrator: Administrator is exempt from owner isolation.
+The server accepts any user with desk access, which every Wallet user has.
 
-Requires Frappe v16 or later, for the OAuth2 metadata endpoints. Nothing else needs
-configuring: `OAuth Settings` enables dynamic client registration and the `.well-known`
-metadata endpoints by default.
-
-Verify by listing the tools, as a user with the `Wallet User` or `System Manager` role:
+Verify by listing the tools:
 
 ```bash
 curl -s -X POST -H "Authorization: token <api_key>:<api_secret>" \
-	-H "Content-Type: application/json" \
+	-H "Content-Type: application/json" -H "Accept: application/json" \
 	-d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
-	https://<your-site>/api/method/wallet.mcp.handle_mcp
+	https://<your-site>/api/v2/mcp
 ```
-
-`frappe-mcp check` reports this handler as "not properly registered". That is expected — it
-looks for the `@mcp.register()` decorator, which this app deliberately does not use. See
-`wallet/mcp/__init__.py`.
 
 </samp>
 </details>

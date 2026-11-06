@@ -1,11 +1,12 @@
 # Copyright (c) 2026, girish.raghav2004@gmail.com and contributors
 # For license information, please see license.txt
 
-"""Tests for the MCP tool bodies.
+"""Tests for the agent-facing methods in `wallet.mcp.tools`.
 
-The tools are called directly rather than over HTTP: the transport is `frappe-mcp`'s
-concern, and what can actually break here is the app's own logic - isolation, name
-resolution, and the validation paths.
+The methods are called directly rather than over HTTP: the transport is Frappe's built-in
+MCP server, and what can actually break here is the app's own logic - isolation, name
+resolution, and the validation paths. The write gate and the built-in server's path to
+these methods are covered in test_gate.py.
 
 Isolation gets the most coverage on purpose. Every tool runs as whoever holds the OAuth
 token, so a query that bypasses `permission_query_conditions` would quietly expose one
@@ -17,6 +18,7 @@ from frappe.tests import IntegrationTestCase, change_settings, set_user
 
 from wallet.mcp import resolve, tools
 from wallet.tests.fixtures import commit, make_account, make_category, make_transaction, make_user, purge
+from wallet.tests.mcp.utils import mcp_request
 
 
 class TestMCPTools(IntegrationTestCase):
@@ -152,7 +154,7 @@ class TestMCPTools(IntegrationTestCase):
 
 	@change_settings("Wallet Settings", allow_mcp_writes=0)
 	def test_add_transaction_refused_when_writes_disabled(self):
-		with set_user(self.alice), self.assertRaises(frappe.ValidationError) as cm:
+		with set_user(self.alice), mcp_request(), self.assertRaises(frappe.PermissionError) as cm:
 			tools.add_transaction("Alice Savings", "2026-08-20", "Out", 10)
 
 		self.assertIn("Allow MCP Writes", str(cm.exception))
@@ -265,29 +267,22 @@ class TestMCPTools(IntegrationTestCase):
 
 	# --- wiring ---------------------------------------------------------------------
 
-	def test_every_registered_tool_is_wrapped_in_the_guard(self):
-		"""Without this, deleting `guarded` from registry.py breaks the production
-		rollback invariant and fails no test at all."""
-		from wallet.mcp import registry
+	def test_reads_are_whitelisted_for_get_only(self):
+		"""`call_method` runs a GET-only method as a GET and rolls back afterwards. That
+		rollback is what makes the read tools read-only, so widening one to POST must fail
+		a test rather than quietly turn it into a write path."""
+		# The same test `frappe.mcp.tools.methods.request_method` applies.
+		allowed = frappe.allowed_http_methods_for_whitelisted_func
+		for fn in (
+			tools.list_accounts,
+			tools.list_transactions,
+			tools.list_categories,
+			tools.get_spending_summary,
+		):
+			self.assertIn("GET", allowed[fn], fn.__name__)
+			self.assertNotIn("POST", allowed[fn], fn.__name__)
 
-		registered = {}
-
-		class StubMCP:
-			def tool(self, **kwargs):
-				def decorator(fn):
-					registered[fn.__name__] = fn
-					return fn
-
-				return decorator
-
-		registry.register_tools(StubMCP())
-
-		self.assertEqual(len(registered), len(registry.TOOLS))
-		for fn, _annotations in registry.TOOLS:
-			# functools.wraps keeps the name, which frappe_mcp keys its registry on - so a
-			# wrapped tool is still findable, but must not be the bare function.
-			self.assertIn(fn.__name__, registered)
-			self.assertIsNot(registered[fn.__name__], fn)
+		self.assertIn("POST", allowed[tools.add_transaction])
 
 	# --- filters --------------------------------------------------------------------
 

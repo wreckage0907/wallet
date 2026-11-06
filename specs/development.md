@@ -20,7 +20,7 @@ bench --site <site> run-tests --app wallet          # everything
 bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedup
 ```
 
-436 tests (71 unit, 365 integration), covering every Python module in the app. Where a
+455 tests (71 unit, 384 integration), covering every Python module in the app. Where a
 new test file goes, and the conventions the suites follow, are in [`testing.md`](testing.md)
 — read that before adding one.
 
@@ -40,6 +40,7 @@ new test file goes, and the conventions the suites follow, are in [`testing.md`]
 | `User.after_insert` | `wallet/tests/doc_events/test_user.py` |
 | Serving the PWA shell and service worker | `wallet/tests/test_pwa.py`, `wallet/tests/www/test_wallet.py` |
 | MCP tools | `wallet/tests/mcp/test_tools.py` |
+| MCP write gate, built-in server path | `wallet/tests/mcp/test_gate.py` |
 | Doctype controllers | `test_<doctype>.py` beside each controller |
 
 Statements are built in memory by `wallet/tests/fixtures.py`, never checked in — see the

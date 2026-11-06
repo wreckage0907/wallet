@@ -20,6 +20,8 @@ export const M = {
 	saveAsFormat: "wallet.api.import_api.save_as_format",
 	previewLayout: "wallet.api.import_api.preview_layout",
 	createTransaction: "wallet.api.transaction_api.create_transaction",
+	mcpAccess: "wallet.api.mcp_access.get_mcp_access",
+	setMcpWrites: "wallet.api.mcp_access.set_mcp_writes",
 };
 
 export function useOverview(asOn) {

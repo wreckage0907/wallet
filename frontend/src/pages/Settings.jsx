@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ExternalLink, RefreshCw, RotateCcw } from "lucide-react";
-import { useFrappeAuth, useFrappePostCall } from "frappe-react-sdk";
+import { Bot, ExternalLink, RefreshCw, RotateCcw } from "lucide-react";
+import { useFrappeAuth, useFrappeGetCall, useFrappePostCall } from "frappe-react-sdk";
 
 import { Card, Screen } from "../components/ui.jsx";
 import { M } from "../lib/api.js";
@@ -19,6 +19,61 @@ function ActionRow({ icon: Icon, label, hint, onClick, busy, danger }) {
 			<span className="min-w-0 flex-1">
 				<span className="block text-sm font-medium text-ink-gray-9">{label}</span>
 				{hint && <span className="block text-xs text-ink-gray-5">{hint}</span>}
+			</span>
+		</button>
+	);
+}
+
+// The user's half of the MCP write gate (wallet/mcp/gate.py). The site half is an
+// administrator's, in Wallet Settings, so it is reported here but not switchable.
+function agentHint(access) {
+	if (!access) return "Checking…";
+	if (!access.user) return "Off: agents you connect can only read";
+	if (!access.site) return "On for you, but an administrator has turned it off for this site";
+	return "On: agents you connect can record and change transactions";
+}
+
+function AgentAccessRow({ onError }) {
+	const { data, mutate } = useFrappeGetCall(M.mcpAccess, undefined, undefined, {
+		revalidateOnFocus: false,
+	});
+	const { call, loading } = useFrappePostCall(M.setMcpWrites);
+	const access = data?.message;
+	const on = Boolean(access?.user);
+
+	const toggle = async () => {
+		try {
+			const result = await call({ enabled: !on });
+			mutate({ message: result.message }, false);
+		} catch (error) {
+			onError(error?.message || "That did not work.");
+		}
+	};
+
+	return (
+		<button
+			role="switch"
+			aria-checked={on}
+			onClick={toggle}
+			disabled={!access || loading}
+			className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left disabled:opacity-50"
+		>
+			<Bot size={18} className="text-ink-gray-5" />
+			<span className="min-w-0 flex-1">
+				<span className="block text-sm font-medium text-ink-gray-9">Let AI agents make changes</span>
+				<span className="block text-xs text-ink-gray-5">{agentHint(access)}</span>
+			</span>
+			<span
+				aria-hidden="true"
+				className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+					on ? "bg-surface-gray-7" : "bg-surface-gray-3"
+				}`}
+			>
+				<span
+					className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface-white shadow transition-all ${
+						on ? "left-[18px]" : "left-0.5"
+					}`}
+				/>
 			</span>
 		</button>
 	);
@@ -73,6 +128,10 @@ export default function Settings() {
 			</Card>
 
 			{note && <Card className="text-sm text-ink-gray-5">{note}</Card>}
+
+			<Card className="!p-0 overflow-hidden">
+				<AgentAccessRow onError={setNote} />
+			</Card>
 
 			<Card className="!p-0 overflow-hidden">
 				<a href="/app/wallet" className="flex min-h-[56px] items-center gap-3 px-4 py-3">

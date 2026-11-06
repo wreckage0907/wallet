@@ -1,24 +1,29 @@
 # Copyright (c) 2026, girish.raghav2004@gmail.com and contributors
 # For license information, please see license.txt
 
-"""The tool bodies exposed over MCP.
+"""Wallet's agent-facing API, reached through Frappe's built-in MCP server.
 
-Plain functions, registered onto an `MCP` instance by `wallet.mcp.registry`. Kept
-undecorated here so this module stays importable - and unit-testable - without
-`frappe_mcp` installed.
+The built-in server (`/api/v2/mcp`) has a fixed set of generic tools and no way for an app
+to add one, so these are plain whitelisted methods that an agent finds with
+`search_methods` and runs with `call_method`, e.g.
+`call_method(method="wallet.mcp.tools.list_accounts")`. They exist because the generic
+document tools are the wrong shape for this app: accounts and categories are
+`autoname: hash`, and a model cannot carry `a1b2c3d4e5` across turns, nor total a month of
+spending from paginated `list_documents` calls.
 
-Two rules govern everything in this file:
+Three rules govern everything in this file:
 
-* **Docstrings are the API contract.** `frappe-mcp` derives the tool description and the
-  per-argument JSON Schema descriptions from the Google-style docstring, so this is the
-  only thing the model reads before calling. The sign convention especially has to be
+* **Docstrings are the API contract.** `get_method_schema` returns them verbatim, and it is
+  the only thing the model reads before calling. The sign convention especially has to be
   spelled out, or a model will pass a negative amount and trip `validate_amount`.
+* **Reads are whitelisted for GET only.** `call_method` runs such a method as a GET and
+  rolls back afterwards, so the framework, not this file, guarantees they write nothing.
 * **Never `frappe.get_all`.** It bypasses `permission_query_conditions` (see
   wallet/permissions.py), which is the whole basis of this app's data isolation. Every
   query below goes through `frappe.get_list`.
 
-Every tool returns a dict at the top level: `frappe_mcp` only populates
-`structuredContent` when the return value is a dict, so bare lists get wrapped.
+Every method returns a dict at the top level, so the MCP result's `structuredContent` is
+the object itself rather than a `{"result": [...]}` wrapper.
 """
 
 import frappe
@@ -34,6 +39,7 @@ from wallet.settings import get_setting
 MAX_LIMIT = 200
 
 
+@frappe.whitelist(methods=["GET"])
 def list_accounts() -> dict:
 	"""List every account with its current balance.
 
@@ -69,6 +75,7 @@ def list_accounts() -> dict:
 	}
 
 
+@frappe.whitelist(methods=["GET"])
 def list_transactions(
 	account: str | None = None,
 	from_date: str | None = None,
@@ -170,6 +177,7 @@ def list_transactions(
 	}
 
 
+@frappe.whitelist(methods=["GET"])
 def list_categories() -> dict:
 	"""List the spending and income categories available for filtering and categorizing.
 
@@ -199,6 +207,7 @@ def list_categories() -> dict:
 	}
 
 
+@frappe.whitelist(methods=["GET"])
 def get_spending_summary(from_date: str, to_date: str, account: str | None = None) -> dict:
 	"""Summarise money in, money out and spending per category over a period.
 
@@ -292,6 +301,7 @@ def get_spending_summary(from_date: str, to_date: str, account: str | None = Non
 	}
 
 
+@frappe.whitelist(methods=["POST"])
 def add_transaction(
 	account: str,
 	posting_date: str,
@@ -305,6 +315,9 @@ def add_transaction(
 ) -> dict:
 	"""Record a transaction on an account.
 
+	Over MCP this is refused unless "Allow MCP Writes" is on in Wallet Settings and the
+	user has turned on "Let AI agents make changes" in the Wallet app's settings.
+
 	Args:
 	    account: Account name, e.g. "HDFC Savings". Call list_accounts for valid names.
 	    posting_date: Date of the transaction, YYYY-MM-DD.
@@ -317,16 +330,9 @@ def add_transaction(
 	        Interest, Charges, Other.
 	    reference_number: Bank reference, UTR or cheque number, if known.
 	"""
-	# Checked in the tool body rather than at the endpoint, so it holds however this is
-	# reached. A URL-level split would not: the bearer token is session-wide.
-	if not get_setting("allow_mcp_writes"):
-		frappe.throw(
-			_(
-				"Recording transactions over MCP is turned off. Enable "
-				'"Allow MCP Writes" in Wallet Settings to allow it.'
-			)
-		)
-
+	# No write gate here: `allow_mcp_writes` is enforced on the Wallet Transaction document
+	# itself (wallet/mcp/gate.py), which is the only place that covers the generic
+	# `create_document` tool as well as this one.
 	result = create_transaction(
 		account=resolve.account(account),
 		posting_date=posting_date,

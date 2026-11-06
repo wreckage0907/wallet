@@ -9,8 +9,9 @@ as a plain Python call. Duplicated once, the two would drift - and the thing tha
 drift first is the duplicate pre-check, which is the only reason a colliding entry
 reports "you already recorded this" instead of a MariaDB error code.
 
-The MCP tool keeps what is genuinely its own: the `allow_mcp_writes` gate, and turning
-the human names a model speaks into docnames. By the time it calls here it holds ids,
+The MCP tool keeps what is genuinely its own: turning the human names a model speaks into
+docnames. The `allow_mcp_writes` gate is not here or there but on the document itself
+(wallet/mcp/gate.py), since the built-in MCP server can also create one directly. By the time it calls here it holds ids,
 which is also what the PWA holds - its selects are populated from permission-filtered
 lists, so the id is already in hand and there is nothing to resolve.
 

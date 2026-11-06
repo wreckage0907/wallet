@@ -59,7 +59,7 @@
   },
   {
    "default": "0",
-   "description": "Let an AI agent connected over MCP record transactions. Off by default: reading your finances is far less consequential than writing to them. This is enforced in the tool itself, so it holds however the endpoint is reached. Site-wide, not per user - on a multi-user site this opens the write path for every connected agent, each still confined to its own owner's records.",
+   "description": "Let an AI agent connected over MCP change Wallet data: record transactions, or create, edit and delete any Wallet record. Off by default: reading your finances is far less consequential than writing to them. Enforced on every Wallet document, so it holds for Frappe's generic MCP tools too, and for this setting itself. This is the site's half: each user must also opt in for themselves, under More in the Wallet app, before an agent connected as them can write.",
    "fieldname": "allow_mcp_writes",
    "fieldtype": "Check",
    "label": "Allow MCP Writes"

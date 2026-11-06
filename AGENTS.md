@@ -5,7 +5,7 @@
 **Wallet** is a Frappe v16 app for personal finance: you add your bank accounts, import
 the statement files your bank emails you, and the app parses, de-duplicates and
 auto-categorizes every row into `Wallet Transaction` records. It ships a mobile-first PWA
-at `/wallet`, a Frappe desk workspace for the heavier forms, and an MCP server so an AI
+at `/wallet`, a Frappe desk workspace for the heavier forms, and MCP support so an AI
 agent can read your accounts and record transactions.
 
 Single-user-per-dataset by design: every personal record is isolated to its `owner`, so
@@ -17,7 +17,7 @@ for Swiggy / Zomato / UPI / FASTag / NACH-EMI narrations.
 
 - **App name:** `wallet` · **Module:** `Wallet` · **Version:** `0.0.1` · **License:** MIT
 - **Routes:** `/wallet` (PWA), `/app/wallet` (desk workspace),
-  `/api/method/wallet.mcp.handle_mcp` (MCP)
+  `/api/v2/mcp` (Frappe's built-in MCP server; Wallet adds `wallet.mcp.tools.*`)
 
 ## Planning / Spec-ing
 

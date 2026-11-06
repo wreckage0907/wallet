@@ -46,6 +46,11 @@ class WalletAccount(Document):
 	@frappe.whitelist()
 	def refresh_cached_balance(self) -> float:
 		from wallet.api.balance import get_account_balance
+		from wallet.mcp import gate
+
+		# Reachable over MCP as `call_document_method`, and db.set_value below skips
+		# document events, so the gate has to be asked directly.
+		gate.check()
 
 		balance = get_account_balance(self.name)["balance"]
 		frappe.db.set_value(
