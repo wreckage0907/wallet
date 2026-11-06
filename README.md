@@ -28,7 +28,7 @@
 <samp>
 
 > Built for Indian retail banking: `dd/mm` dates, `Dr`/`Cr` suffixes, running-balance columns,
-> password-protected xlsx, and out-of-the-box rules for Swiggy, Zomato, UPI, FASTag and NACH EMIs.
+> password-protected xlsx, and out-of-the-box rules for Swiggy, Zomato, FASTag, NACH EMIs and salary credits.
 
 </samp>
 

@@ -13,7 +13,7 @@ one site can host many people without their money ever mixing.
 
 Written for Indian retail banking — dd/mm dates, `Dr`/`Cr` suffixes, running-balance
 columns, ECMA-376 password-protected xlsx, INR defaults, and seed categorization rules
-for Swiggy / Zomato / UPI / FASTag / NACH-EMI narrations.
+for Swiggy / Zomato / FASTag / NACH-EMI / salary narrations.
 
 - **App name:** `wallet` · **Module:** `Wallet` · **Version:** `0.0.1` · **License:** MIT
 - **Routes:** `/wallet` (PWA), `/app/wallet` (desk workspace),
