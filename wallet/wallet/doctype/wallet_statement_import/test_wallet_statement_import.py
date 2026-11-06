@@ -343,6 +343,59 @@ class TestStagingDedup(StatementImportTestCase):
 		self.assertEqual(result["duplicate_rows"], len(STATEMENT_ROWS))
 
 
+#: A statement with neither a reference number nor a running balance - the usual shape of
+#: a credit card export, and the only one that reaches the occurrence-ordinal tier.
+BARE_HEADER = ["Date", "Narration", "Withdrawal Amt.", "Deposit Amt."]
+BARE_CHAI = ["05/04/2026", "UPI-CHAI-STALL", "50.00", ""]
+BARE_ROWS = [
+	BARE_CHAI,
+	BARE_CHAI,
+	["06/04/2026", "AMAZON PAY INDIA", "1200.00", ""],
+]
+
+
+class TestStagingDedupWithoutReferenceOrBalance(StatementImportTestCase):
+	email = "imp-dedup-bare@example.com"
+
+	def bare_import(self, rows) -> str:
+		return self.new_import(statement_grid(rows=rows, header=BARE_HEADER))
+
+	def test_two_identical_rows_in_one_file_are_both_kept(self):
+		with set_user(self.user):
+			doc = frappe.get_doc("Wallet Statement Import", self.bare_import(BARE_ROWS))
+			doc.parse()
+
+		self.assertEqual([row.status for row in doc.rows], ["New", "New", "New"])
+
+	def test_re_importing_the_whole_statement_stages_nothing_new(self):
+		"""The ordinal must be counted within the file only. Adding the rows already stored
+		shifted every ordinal on a re-import, so each row hashed as unseen and the whole
+		statement was inserted a second time."""
+		with set_user(self.user):
+			first = frappe.get_doc("Wallet Statement Import", self.bare_import(BARE_ROWS))
+			first.parse()
+			first.commit_rows()
+
+			second = frappe.get_doc("Wallet Statement Import", self.bare_import(BARE_ROWS))
+			result = second.parse()
+
+		self.assertEqual(result["new_rows"], 0)
+		self.assertEqual(result["duplicate_rows"], len(BARE_ROWS))
+
+	def test_an_overlapping_statement_stages_only_the_occurrence_it_adds(self):
+		"""The earlier file saw one chai payment that day, the later one sees two. Only the
+		second is new."""
+		with set_user(self.user):
+			first = frappe.get_doc("Wallet Statement Import", self.bare_import([BARE_CHAI]))
+			first.parse()
+			first.commit_rows()
+
+			second = frappe.get_doc("Wallet Statement Import", self.bare_import([BARE_CHAI, BARE_CHAI]))
+			second.parse()
+
+		self.assertEqual([row.status for row in second.rows], ["Duplicate", "New"])
+
+
 class TestCommit(StatementImportTestCase):
 	email = "imp-commit@example.com"
 
