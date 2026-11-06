@@ -9,8 +9,9 @@ yarn dev      # Vite on :8080, proxied to the bench
 yarn build    # → wallet/public/frontend/ and wallet/www/wallet.html
 ```
 
-Build output is **gitignored**, so a fresh clone always needs `yarn build`. Skipping it
-gets a 404 for the PWA and for the app icon on the `/apps` screen.
+Build output is **gitignored**. On an install, `bench build` produces it (see CI below);
+in a working copy you are editing, run `yarn build` yourself. Without it, the PWA and the
+app icon on the `/apps` screen 404.
 
 ## Server tests
 
@@ -102,17 +103,29 @@ Four workflows, all on pull requests:
 |---|---|---|
 | `ci.yml` | Server Tests | `bench run-tests --app wallet` on a site built from scratch |
 | `frontend.yml` | Lint & Build PWA | `oxlint`, `yarn build`, and that the artefacts actually landed |
-| `ui-tests.yml` | Playwright E2E Tests | the whole stack, seeded and driven in a browser |
+| `ui-tests.yml` | Playwright E2E Tests | the whole stack, seeded and driven in a browser — with the PWA built by `bench build` alone, as on Frappe Cloud |
 | `linters.yml` | Semantic Commits / Semgrep / Pre-Commit | conventional commits, Frappe's semgrep rules, `pre-commit` |
 
 `ci.yml` and `ui-tests.yml` each build a complete bench on the runner — `bench init`,
 `new-site`, `install-app` — because a Frappe app cannot be tested without a database
 behind it. There is no mocking layer; doctypes and permissions are rows.
 
-**`bench build` never runs an app's Vite build.** It only runs Frappe's own esbuild over
-`*.bundle.*` files (`frappe/build.py`). Since the PWA build output is gitignored, `/wallet`
-serves nothing without an explicit `yarn build`, so both `frontend.yml` and `ui-tests.yml`
-run one; `frontend.yml` then asserts the output exists rather than trusting the exit code.
+**`bench build` runs the PWA build — that is how a fresh install gets one.** Unless it is
+told to use cached assets, `bench build` passes `--run-build-command` (`frappe/build.py`),
+and Frappe's esbuild then runs `yarn build` in every app whose root `package.json` has a
+`build` script (`run_build_command_for_apps`). Ours chains into `frontend`, and the root
+`postinstall` installs `frontend`'s dependencies when `bench get-app` runs `yarn install`.
+That is the whole Frappe Cloud path — the same one Frappe CRM ships its frontend on — and
+it is why the build output can stay gitignored.
+
+`ui-tests.yml` deliberately has no explicit `yarn build`: it relies on `bench build` alone
+and asserts the manifest and service worker come back 200, so a break in that chain fails
+CI before it ships a dead `/wallet`. `frontend.yml` builds directly, for lint and the
+artefact upload.
+
+On a Frappe Manager bench, `frontend/node_modules` installed from macOS will not build
+inside the Linux container (rolldown's native binding is per-platform). Run `yarn build`
+on the host there, or reinstall `node_modules` inside the container.
 
 **The Playwright job is not sharded.** Every shard would pay for its own `bench init` and
 `new-site`, which costs far more than the tests it would save.

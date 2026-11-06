@@ -51,9 +51,10 @@ jobs:
         run: yarn build
 
       - name: Verify build output
-        # `wallet/public/frontend/` and `wallet/www/wallet.html` are gitignored, so a
-        # fresh clone 404s on /wallet until this build runs. Asserting the artefacts
-        # exist is what turns "the build exited 0" into "the PWA can actually serve".
+        # `wallet/public/frontend/` and `wallet/www/wallet.html` are gitignored; on a real
+        # install `bench build` produces them by running the root `build` script (the
+        # UI Tests workflow proves that path). Asserting the artefacts exist is what turns
+        # "the build exited 0" into "the PWA can actually serve".
         run: |
           test -f wallet/public/frontend/index.html
           test -f wallet/www/wallet.html

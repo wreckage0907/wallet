@@ -113,21 +113,26 @@ jobs:
         env:
           CI: "Yes"
 
-      - name: Build PWA
-        # `bench build` only runs Frappe's own esbuild over `*.bundle.*` files; it never
-        # runs an app's Vite build. Without this, /wallet serves nothing — the built
-        # output is gitignored. It has to happen before `bench build`, which is what
-        # links wallet/public into sites/assets.
-        working-directory: /home/runner/frappe-bench/apps/wallet
-        run: |
-          yarn install --frozen-lockfile
-          yarn build
-
       - name: Build Assets
+        # Deliberately no separate `yarn build`. This is the Frappe Cloud path: FC runs
+        # `bench get-app` (whose `yarn install` chains into `frontend` via the root
+        # `postinstall`) and then `bench build`, which runs the root `build` script of
+        # every app that has one (`--run-build-command`, frappe/build.py). The PWA output
+        # is gitignored, so if that chain ever breaks, /wallet is dead on FC - and the
+        # next step fails here first.
         working-directory: /home/runner/frappe-bench
         run: bench build
         env:
           CI: "Yes"
+
+      - name: Verify bench build produced the PWA
+        working-directory: /home/runner/frappe-bench/apps/wallet
+        run: |
+          test -f wallet/public/frontend/index.html
+          test -f wallet/public/frontend/wallet_manifest.json
+          test -f wallet/public/frontend/wallet_sw.js
+          test -f wallet/www/wallet.html
+          echo "PWA built by bench build alone."
 
       - name: Configure Site for UI Tests
         working-directory: /home/runner/frappe-bench
@@ -150,6 +155,16 @@ jobs:
           echo "Waiting for Frappe server to start..."
           timeout 60 bash -c 'until curl -s http://wallet.test:8000 > /dev/null; do sleep 2; done'
           echo "Frappe server is ready!"
+
+      - name: Verify the PWA is served
+        # The manifest and service worker are what make /wallet installable; a 404 on
+        # either still renders the page but silently drops install and offline.
+        run: |
+          for url in /assets/wallet/frontend/wallet_manifest.json /wallet_sw.js; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://wallet.test:8000$url")
+            echo "$url -> $code"
+            test "$code" = "200"
+          done
 
       - name: Match the browser timezone to the site
         # Frappe reads `nowdate()` from System Settings, which only the setup wizard
