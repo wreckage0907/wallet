@@ -317,7 +317,6 @@ permission_query_conditions = {
 		"Wallet Category",
 		"Wallet Categorization Rule",
 		"Wallet Statement Import",
-		"Wallet Budget",
 	)
 }
 

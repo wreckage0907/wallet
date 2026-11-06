@@ -39,7 +39,6 @@ OWNED_DOCTYPES = (
 	"Wallet Category",
 	"Wallet Categorization Rule",
 	"Wallet Statement Import",
-	"Wallet Budget",
 )
 
 
