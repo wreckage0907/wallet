@@ -300,6 +300,32 @@ def xlsx_bytes(grid: list[list], sheet_name: str = "Statement") -> bytes:
 	return buffer.getvalue()
 
 
+def xls_bytes(grid: list[list], sheet_name: str = "Statement") -> bytes:
+	"""Write a grid to an in-memory legacy Excel 97-2003 workbook.
+
+	Date and datetime cells are written as real date-typed cells, which is what a bank's
+	own export carries and what the reader has to convert back.
+	"""
+	import datetime
+	import io
+
+	import xlwt
+
+	date_style = xlwt.easyxf(num_format_str="DD/MM/YYYY")
+	workbook = xlwt.Workbook()
+	sheet = workbook.add_sheet(sheet_name)
+	for r, row in enumerate(grid):
+		for c, value in enumerate(row):
+			if isinstance(value, datetime.date):
+				sheet.write(r, c, value, date_style)
+			else:
+				sheet.write(r, c, value)
+
+	buffer = io.BytesIO()
+	workbook.save(buffer)
+	return buffer.getvalue()
+
+
 def csv_bytes(grid: list[list], delimiter: str = ",") -> bytes:
 	import csv
 	import io

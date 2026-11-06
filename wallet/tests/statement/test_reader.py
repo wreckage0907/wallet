@@ -24,6 +24,7 @@ from wallet.tests.fixtures import (
 	STATEMENT_ROWS,
 	csv_bytes,
 	statement_grid,
+	xls_bytes,
 	xlsx_bytes,
 )
 
@@ -153,6 +154,21 @@ class TestReadGrid(IntegrationTestCase):
 		grid, _ = read_grid(xlsx_bytes([["Date", "Narration"]]), "statement.xls")
 
 		self.assertEqual([str(cell) for cell in grid[0]], ["Date", "Narration"])
+
+	def test_a_legacy_xls_is_read_with_its_dates_converted(self):
+		grid, sheet = read_grid(
+			xls_bytes([["Date", "Narration"], [datetime.date(2026, 4, 2), "UPI-CHAI-STALL"]], "April"),
+			"statement.xls",
+		)
+
+		self.assertEqual(sheet, "April")
+		self.assertEqual(grid[1], [datetime.datetime(2026, 4, 2), "UPI-CHAI-STALL"])
+
+	def test_a_legacy_xls_misnamed_as_xlsx_is_still_read(self):
+		"""Routed by content: openpyxl cannot open an OLE2 document whatever it is called."""
+		grid, _ = read_grid(xls_bytes([["Date", "Narration"]]), "statement.xlsx")
+
+		self.assertEqual(grid[0], ["Date", "Narration"])
 
 	def test_something_that_is_not_a_workbook_throws_a_readable_message(self):
 		"""A PDF statement, or a download that returned an error page. The user gets told
