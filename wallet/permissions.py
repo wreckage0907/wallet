@@ -26,7 +26,11 @@ as the break-glass account for recovery and debugging.
 `frappe.get_all` and `frappe.qb` BYPASS permission query conditions entirely. Any
 aggregate in `wallet/api/` must either use `frappe.get_list` (permission-aware) or
 carry an explicit `owner = frappe.session.user` filter. This is the single most likely
-security bug in this app - grep for `get_all` in code review.
+security bug in this app - grep for `get_all` and `frappe.qb` in code review.
+
+Grepping this repo is not enough on its own: framework code that queries on the app's
+behalf can bypass the hooks too. `frappe.desk.treeview.get_children` did exactly that
+for Wallet Category, which is why `wallet/treeview.py` overrides it.
 """
 
 import frappe

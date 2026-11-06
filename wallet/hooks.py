@@ -183,9 +183,11 @@ app_license = "mit"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "wallet.event.get_events"
-# }
+# The framework's tree method runs a raw query with no permission check, which listed
+# every user's Wallet Category names (audit finding 1). See wallet/treeview.py.
+override_whitelisted_methods = {
+	"frappe.desk.treeview.get_children": "wallet.treeview.get_children",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
