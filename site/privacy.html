@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Privacy Policy · Wallet</title>
+	<meta name="description" content="What data the Wallet app handles, where it is stored, who can see it, and how to delete it.">
+	<link rel="icon" href="images/logo.svg" type="image/svg+xml">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<header class="site">
+		<div class="wrap">
+			<a class="brand" href="./"><img src="images/logo.svg" alt="">Wallet</a>
+			<nav class="site" aria-label="Site">
+				<a href="https://github.com/wreckage0907/wallet/wiki">Documentation</a>
+				<a href="https://github.com/wreckage0907/wallet/issues">Support</a>
+				<a href="https://github.com/wreckage0907/wallet">Source</a>
+			</nav>
+		</div>
+	</header>
+
+	<main class="wrap">
+		<article class="prose">
+			<h1>Privacy Policy</h1>
+			<p class="meta">Effective 6 November 2026</p>
+
+			<p>
+				Wallet is an open-source app that you install on your own Frappe site, either one
+				you host yourself or one on Frappe Cloud. This policy explains what the app does
+				with your financial data. The short version: your data stays on your site, the
+				people who make Wallet never receive it, and nobody else sees your records unless
+				you, or whoever runs your site, lets them.
+			</p>
+
+			<h2>1. What Wallet handles</h2>
+			<p>Wallet stores what you give it to track your money:</p>
+			<ul>
+				<li><strong>Bank statement files</strong> you upload (xlsx, xls or csv), and their contents: account numbers, account holder and counterparty names, dates, amounts, running balances, narrations, and references such as UTR and cheque numbers.</li>
+				<li><strong>The records built from them:</strong> accounts, transactions, categories, categorization rules, statement imports and saved statement formats.</li>
+				<li><strong>Statement passwords</strong>, only while a password-protected file is being read. The password is stored in a password field and cleared once the file has been read.</li>
+				<li><strong>Your settings:</strong> whether you allow AI agents to change your Wallet data.</li>
+			</ul>
+			<p>Your login and user profile are managed by Frappe itself, not by Wallet.</p>
+
+			<h2>2. Where it is stored</h2>
+			<p>
+				Everything above is stored only in your Frappe site's database and file storage.
+				Uploaded statement files are attached to their import as private files by default.
+			</p>
+			<p>
+				Wallet has <strong>no analytics, telemetry, tracking or phone-home</strong> of any
+				kind. It makes no network requests to the Wallet project or to any third party. The
+				mobile app (at <code>/wallet</code>) caches only its own application code for
+				speed. It deliberately does not cache your financial data on your device, because a
+				shared device would keep that cache after you log out.
+			</p>
+
+			<h2>3. Who can see your data</h2>
+			<ul>
+				<li><strong>You.</strong> Every Wallet record is visible only to the user who created it. This applies even to other users with the System Manager role.</li>
+				<li><strong>The site's Administrator account.</strong> Administrator is exempt from this rule, as a break-glass account for recovery.</li>
+				<li><strong>Whoever runs your site's server or database.</strong> Anyone with direct access to the server, database or backups can read everything stored on the site. On Frappe Cloud, that includes Frappe Cloud under its own terms.</li>
+				<li><strong>AI agents you connect</strong> (see the next section).</li>
+			</ul>
+			<p>The people who make Wallet have no access to your site or your data.</p>
+
+			<h2>4. AI agents (MCP)</h2>
+			<p>
+				Wallet works with Frappe's built-in MCP server, which lets an AI assistant such as
+				Claude read your Wallet data. An agent can connect only after you log in and
+				approve it. It then acts <strong>as you</strong>: it sees exactly what you see, and
+				nothing that belongs to other users.
+			</p>
+			<p>Please understand these points before connecting one:</p>
+			<ul>
+				<li><strong>What an agent reads leaves your site.</strong> Accounts, balances, transactions and categories that an agent reads are sent to that agent and its AI provider, under the provider's own privacy terms. Wallet cannot control what happens to them after that.</li>
+				<li><strong>Access is not limited to Wallet.</strong> The token an agent receives is not limited to Wallet. It can reach anything your account can reach on that Frappe site through the site's API.</li>
+				<li><strong>Writing is off by default, twice over.</strong> An agent can change your Wallet data only if your site's administrator turns on <em>Allow MCP Writes</em> in Wallet Settings <strong>and</strong> you turn on <em>Let AI agents make changes</em> in the Wallet app. Only you can turn on your own switch, and an agent can never turn on either one.</li>
+				<li><strong>You can revoke an agent at any time</strong> by revoking its token under <em>OAuth Bearer Token</em> in your Frappe site, or by asking your site's administrator to.</li>
+			</ul>
+
+			<h2>5. Deleting your data</h2>
+			<ul>
+				<li>You can delete your own transactions, accounts, categories, rules and statement imports from the Wallet desk at <code>/app/wallet</code>.</li>
+				<li>An import cannot be deleted while transactions created from it still exist. Delete those transactions first. Deleting the import then removes its staged rows and its attached statement file.</li>
+				<li>Frappe keeps a copy of deleted records in <em>Deleted Documents</em>, from which an administrator can restore them. To remove them for good, ask your site's administrator to delete them there as well.</li>
+				<li>Copies of your data in site backups remain until those backups expire or are deleted. That is up to whoever runs your site.</li>
+				<li>Uninstalling Wallet removes its data structures from the site. Take a backup first if you want to keep anything.</li>
+			</ul>
+
+			<h2>6. Who is responsible for your data</h2>
+			<p>
+				Your bank statements and the records built from them are your data. Whoever runs
+				the Frappe site Wallet is installed on decides how that site is operated, backed
+				up and accessed. If that is you, you are the controller of your data. The Wallet
+				project does not collect, sell, share or process your data, because it never
+				receives it.
+			</p>
+
+			<h2>7. This website</h2>
+			<p>
+				This site is hosted on GitHub Pages. It uses no cookies, analytics or third-party
+				scripts. GitHub may log technical data such as IP addresses when serving it, as
+				described in the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub General Privacy Statement</a>.
+			</p>
+
+			<h2>8. Changes and contact</h2>
+			<p>
+				When this policy changes, the new version is published here with a new effective
+				date, and the history is kept in the <a href="https://github.com/wreckage0907/wallet/commits/main/site/privacy.html">public repository</a>.
+				Questions or concerns: <a href="https://github.com/wreckage0907/wallet/issues">open an issue on GitHub</a>.
+			</p>
+		</article>
+	</main>
+
+	<footer class="site">
+		<div class="wrap">
+			<span>Wallet is open source under the MIT License.</span>
+			<nav aria-label="Footer">
+				<a href="https://github.com/wreckage0907/wallet/wiki">Documentation</a>
+				<a href="https://github.com/wreckage0907/wallet/issues">Support</a>
+				<a href="privacy.html">Privacy</a>
+				<a href="terms.html">Terms</a>
+			</nav>
+		</div>
+	</footer>
+</body>
+</html>

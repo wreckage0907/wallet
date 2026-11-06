@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Wallet: personal finance for Frappe</title>
+	<meta name="description" content="Wallet is an open-source Frappe app that parses, de-duplicates and categorizes the bank statements your bank emails you, with a mobile app and MCP support for AI agents.">
+	<link rel="icon" href="images/logo.svg" type="image/svg+xml">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<header class="site">
+		<div class="wrap">
+			<a class="brand" href="./"><img src="images/logo.svg" alt="">Wallet</a>
+			<nav class="site" aria-label="Site">
+				<a href="https://github.com/wreckage0907/wallet/wiki">Documentation</a>
+				<a href="https://github.com/wreckage0907/wallet/issues">Support</a>
+				<a href="https://github.com/wreckage0907/wallet">Source</a>
+			</nav>
+		</div>
+	</header>
+
+	<main>
+		<div class="wrap hero">
+			<h1>Your bank statements, parsed, de-duplicated and finally readable.</h1>
+			<p class="lede">
+				Wallet is a personal finance app for Frappe. Add your bank accounts, drop in the
+				statement files your bank emails you, and Wallet parses, de-duplicates and
+				categorizes every row, then shows you where the money went, on your phone.
+			</p>
+			<div class="actions">
+				<a class="button primary" href="https://github.com/wreckage0907/wallet/wiki/Installation">Install</a>
+				<a class="button" href="https://github.com/wreckage0907/wallet/wiki">Read the docs</a>
+			</div>
+		</div>
+
+		<section>
+			<div class="wrap">
+				<div class="shots">
+					<figure>
+						<img src="images/pwa-dashboard.png" alt="Dashboard with net worth, monthly cashflow and account list" width="420" height="900" loading="lazy">
+						<figcaption>Net worth, this month's money in and out, and every balance.</figcaption>
+					</figure>
+					<figure>
+						<img src="images/pwa-accounts.png" alt="Account list with balances and a combined total" width="420" height="900" loading="lazy">
+						<figcaption>Savings, cards, cash and loans together.</figcaption>
+					</figure>
+					<figure>
+						<img src="images/pwa-transactions.png" alt="Transactions grouped by day with direction filters" width="420" height="900" loading="lazy">
+						<figcaption>Activity grouped by day.</figcaption>
+					</figure>
+				</div>
+			</div>
+		</section>
+
+		<section>
+			<div class="wrap">
+				<h2>What it does</h2>
+				<div class="grid">
+					<div class="card">
+						<h3>Imports real bank files</h3>
+						<p>Encrypted xlsx, branch details above the table, a totals row below. Wallet finds the transactions, maps the columns, and stages every row for review before anything is written.</p>
+					</div>
+					<div class="card">
+						<h3>De-duplicates overlapping statements</h3>
+						<p>Each transaction is fingerprinted from its own content, so re-importing an overlapping month adds nothing twice.</p>
+					</div>
+					<div class="card">
+						<h3>Categorizes from your rules</h3>
+						<p>Ships with rules tuned for Indian bank narrations (Swiggy, Zomato, UPI, FASTag, NACH EMIs) and a two-level category tree you can change.</p>
+					</div>
+					<div class="card">
+						<h3>Balances that cannot drift</h3>
+						<p>Every balance is recomputed from the opening balance and the transactions, never kept as a running counter.</p>
+					</div>
+					<div class="card">
+						<h3>Reconciles every import</h3>
+						<p>After an import, Wallet compares its closing balance with the one your statement states, so a mis-read row cannot pass quietly.</p>
+					</div>
+					<div class="card">
+						<h3>Works with your AI assistant</h3>
+						<p>Ask what you spent on groceries last month through Frappe's built-in MCP server. Changes need both your administrator and you to switch them on.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section>
+			<div class="wrap">
+				<h2>Reconciliation you can see</h2>
+				<div class="wide">
+					<img src="images/desk-import.png" alt="A completed import with zero variance and a green reconciled banner" width="1440" height="1000" loading="lazy">
+				</div>
+			</div>
+		</section>
+
+		<section>
+			<div class="wrap"><div class="prose">
+				<h2>Your data stays on your site</h2>
+				<p>
+					Wallet runs inside your own Frappe site. Statements and transactions are stored
+					in that site's database and nowhere else. The app has no analytics, telemetry or
+					phone-home of any kind, and every record is visible only to the person who
+					created it. <a href="privacy.html">Read the privacy policy</a>.
+				</p>
+
+				<h2>Get started</h2>
+				<p>Wallet needs a Frappe v16.53.0 or later site.</p>
+				<pre><code>bench get-app https://github.com/wreckage0907/wallet --branch main
+bench --site &lt;site&gt; install-app wallet
+bench build --app wallet</code></pre>
+				<p>
+					Then assign the <strong>Wallet User</strong> role and open <code>/wallet</code>.
+					The <a href="https://github.com/wreckage0907/wallet/wiki/Installation">installation guide</a>
+					has the details.
+				</p>
+			</div></div>
+		</section>
+	</main>
+
+	<footer class="site">
+		<div class="wrap">
+			<span>Wallet is open source under the MIT License.</span>
+			<nav aria-label="Footer">
+				<a href="https://github.com/wreckage0907/wallet/wiki">Documentation</a>
+				<a href="https://github.com/wreckage0907/wallet/issues">Support</a>
+				<a href="privacy.html">Privacy</a>
+				<a href="terms.html">Terms</a>
+			</nav>
+		</div>
+	</footer>
+</body>
+</html>

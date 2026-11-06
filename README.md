@@ -11,6 +11,14 @@
 </p>
 
 <p align="center">
+  <a href="https://wreckage0907.github.io/wallet/">Website</a> ·
+  <a href="https://github.com/wreckage0907/wallet/wiki">Documentation</a> ·
+  <a href="https://github.com/wreckage0907/wallet/issues">Support</a> ·
+  <a href="https://wreckage0907.github.io/wallet/privacy.html">Privacy</a> ·
+  <a href="https://wreckage0907.github.io/wallet/terms.html">Terms</a>
+</p>
+
+<p align="center">
   <samp>
     Personal finance for Frappe. Add your bank accounts, drop in the statement files your bank emails you,<br>
     and Wallet parses, de-duplicates and categorizes every row &mdash; then shows you where the money went, on your phone.
