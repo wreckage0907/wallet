@@ -24,6 +24,8 @@ from werkzeug.wrappers import Response
 NEW_ENDPOINT = "/api/v2/mcp"
 
 
+# Reviewed: guest access is the point (see the docstring), and it reads and writes nothing.
+# nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 @frappe.whitelist(allow_guest=True, methods=["GET", "POST"])
 def handle_mcp() -> Response:
 	"""Retired. Wallet's MCP endpoint moved to Frappe's built-in server at /api/v2/mcp.

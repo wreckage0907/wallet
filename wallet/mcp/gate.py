@@ -48,8 +48,7 @@ def check() -> None:
 	if not get_setting("allow_mcp_writes"):
 		frappe.throw(
 			_(
-				"Changing Wallet data over MCP is turned off for this site. An administrator "
-				'can enable "Allow MCP Writes" in Wallet Settings.'
+				'Changing Wallet data over MCP is turned off for this site. An administrator can enable "Allow MCP Writes" in Wallet Settings.'
 			),
 			frappe.PermissionError,
 		)
@@ -57,8 +56,7 @@ def check() -> None:
 	if not user_opted_in():
 		frappe.throw(
 			_(
-				"You have not allowed AI agents to change your Wallet data. Turn on "
-				'"Let AI agents make changes" in the Wallet app\'s settings to allow it.'
+				'You have not allowed AI agents to change your Wallet data. Turn on "Let AI agents make changes" under More in the Wallet app to allow it.'
 			),
 			frappe.PermissionError,
 		)
