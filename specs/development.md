@@ -155,6 +155,3 @@ declared with a default of 1.
 The development site runs under Frappe Manager in Docker (`fm__demo_localhost__*`),
 reachable at `http://demo.localhost` through `fm_global-nginx-proxy`. The desk is served at
 `/desk`, not `/app` — `/app` redirects.
-
-Note that `site_config.json` records `admin_password: admin`, but that pair no longer
-works; the login returns 401.
