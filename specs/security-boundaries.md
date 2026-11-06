@@ -32,9 +32,13 @@ Any aggregate must either use `frappe.get_list` or carry an explicit
 `owner = frappe.session.user` filter. This is the single most likely security bug in this
 app.
 
-Grepping for `get_all` in review is necessary but not sufficient — see finding 1 in
-[`audit-2026-08-30.md`](audit-2026-08-30.md), where the leak was in framework code that
-queries on the app's behalf and no grep of this repo would have found it.
+Grepping for `get_all` and `frappe.qb` in review is necessary but not sufficient — see
+finding 1 in [`audit-2026-08-30.md`](audit-2026-08-30.md), where the leak was in framework
+code that queries on the app's behalf and no grep of this repo would have found it.
+`frappe.desk.treeview.get_children` listed every user's category names; it is now
+overridden in `hooks.py` by `wallet/treeview.py`, which goes through `frappe.get_list`.
+When you add a whitelisted framework method to a page that shows personal data, check
+what it queries before trusting it.
 
 Current deliberate uses of `get_all`, all reviewed:
 

@@ -73,6 +73,14 @@ class TestPermissionQueryConditions(IntegrationTestCase):
 		self.assertEqual(set(hooks.permission_query_conditions), set(OWNED_DOCTYPES))
 		self.assertEqual(set(hooks.has_permission), set(OWNED_DOCTYPES))
 
+	def test_every_isolated_doctype_exists(self):
+		"""A name here with no doctype behind it is a dangling promise: the next reader
+		assumes the feature exists, and if it is built later without these hooks in mind
+		the default - no isolation - applies to financial data (audit finding 2)."""
+		for doctype in OWNED_DOCTYPES:
+			with self.subTest(doctype=doctype):
+				self.assertTrue(frappe.db.exists("DocType", doctype))
+
 	def test_shared_reference_data_is_deliberately_absent(self):
 		"""A bank and a column mapping hold no personal data, and sharing them is the
 		point - see the module docstring."""

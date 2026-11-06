@@ -136,8 +136,8 @@
 **📝 Prerequisites**
 
 1. **Frappe Bench** with a **v16** site
-2. **Python 3.11+**
-3. **Node 18+** and **yarn**
+2. **Python 3.14** (what Frappe v16 itself requires)
+3. **Node 24+** and **yarn**
 4. **MariaDB** (via bench)
 5. `msoffcrypto-tool` — installed by bench from `pyproject.toml`
 
@@ -157,20 +157,17 @@
 
 **🪴 Usage**
 
-1. Install the app:
+1. Install the app and build its assets:
 
        bench get-app https://github.com/wreckage0907/wallet --branch main
-       bench install-app wallet
+       bench --site <site> install-app wallet
+       bench build --app wallet
 
-2. Build the frontend (not committed):
+   `bench build` also builds the PWA — the app's own `build` script runs as part of it.
 
-       cd apps/wallet/frontend
-       yarn install
-       yarn build
+2. Assign the **Wallet User** role — install creates it but does not assign it.
 
-3. Assign the **Wallet User** role — install creates it but does not assign it.
-
-4. Open it:
+3. Open it:
 
        /wallet        the PWA
        /app/wallet   the desk workspace
