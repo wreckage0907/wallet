@@ -2,14 +2,29 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 
+// Where the build output is served. Matches `--base` in package.json's build script.
+const BASE = "/assets/wallet/frontend/";
+
 // Precache the built shell. self.__WB_MANIFEST is replaced at build time.
-precacheAndRoute(self.__WB_MANIFEST);
+//
+// Its entries are relative to the build directory ("index.html", "assets/index-x.js"),
+// and Workbox resolves a relative entry against the worker's own URL. This worker is
+// served from the site root (see wallet/pwa.py), so "index.html" would become /index.html
+// and 404, and one failed precache request fails the whole install. Anchor every entry
+// here rather than with `modifyURLPrefix` in vite.config.js: vite-plugin-pwa appends the
+// web manifest after Workbox's URL transforms run, so that option never reaches it.
+const anchor = (url) => (url.startsWith("/") ? url : BASE + url);
+precacheAndRoute(
+	self.__WB_MANIFEST.map((entry) =>
+		typeof entry === "string" ? anchor(entry) : { ...entry, url: anchor(entry.url) }
+	)
+);
 cleanupOutdatedCaches();
 
 // Navigations to /wallet/* fall back to the app shell so deep links work offline.
 // Everything Frappe owns is excluded - serving a cached shell for /api or /app would
 // break the desk and swallow API errors.
-const shell = "/assets/wallet/frontend/index.html";
+const shell = BASE + "index.html";
 registerRoute(
 	new NavigationRoute(
 		async ({ event }) => {
