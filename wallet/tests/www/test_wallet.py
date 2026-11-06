@@ -5,8 +5,8 @@
 
 The boot payload the PWA shell is rendered with. Small, but it is the first thing every
 session touches, and two of its properties matter more than their size suggests: a Guest
-must never get the shell, and the dev-only boot endpoint must stay dev-only - it is
-`allow_guest=True`, so `developer_mode` is the only thing standing in front of it.
+must never get the shell, and the dev-only boot endpoint must stay dev-only and closed to
+guests - it hands out the session's CSRF token.
 """
 
 import frappe
@@ -81,7 +81,7 @@ class TestGetContextForDev(IntegrationTestCase):
 	template, so the shell has to fetch its boot payload instead."""
 
 	def test_it_is_refused_when_developer_mode_is_off(self):
-		"""It is `allow_guest=True`, so this check is the only thing in front of it."""
+		"""It returns the session's CSRF token, so it must not exist outside development."""
 		previous = frappe.conf.developer_mode
 		frappe.conf.developer_mode = 0
 		try:
@@ -114,9 +114,9 @@ class TestGetContextForDev(IntegrationTestCase):
 			self.assertTrue(boot["csrf_token"])
 			self.assertEqual(boot["csrf_token"], frappe.session.data.csrf_token)
 
-	def test_a_guest_gets_no_csrf_token(self):
-		with set_user("Guest"):
-			self.assertNotIn("csrf_token", self.dev_boot())
+	def test_it_is_closed_to_guests(self):
+		"""Same as the rendered page. A guest has no session token to hand out."""
+		self.assertNotIn(get_context_for_dev, frappe.guest_methods)
 
 	def test_it_is_callable_over_get(self):
 		"""The shell has no token yet, and a POST without one is refused before the method

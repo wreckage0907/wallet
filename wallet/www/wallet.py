@@ -14,7 +14,7 @@ def get_context():
 	return context
 
 
-@frappe.whitelist(methods=["GET"], allow_guest=True)
+@frappe.whitelist(methods=["GET"])
 def get_context_for_dev() -> dict:
 	"""Boot payload for `yarn dev`, where the page is served by Vite and never passes
 	through this template.
@@ -24,13 +24,15 @@ def get_context_for_dev() -> dict:
 	to be a GET for the same reason - Frappe does not CSRF-check GETs, and the caller has
 	no token yet. Handing the token out is no wider than the rendered page already is: a
 	cross-origin page can make the request but cannot read the response.
+
+	Not open to guests, matching the rendered page, which refuses them too. A guest has
+	no session token to hand out, and the shell treats the 403 as "no token".
 	"""
 	if not frappe.conf.developer_mode:
 		frappe.throw(frappe._("This method is only meant for developer mode"))
 
 	boot = get_boot()
-	if frappe.session.user != "Guest":
-		boot.csrf_token = frappe.sessions.get_csrf_token()
+	boot.csrf_token = frappe.sessions.get_csrf_token()
 	return boot
 
 
