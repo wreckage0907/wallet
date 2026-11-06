@@ -20,9 +20,9 @@ bench --site <site> run-tests --app wallet          # everything
 bench --site <site> run-tests --app wallet --module wallet.tests.utils.test_dedup
 ```
 
-417 tests, covering every Python module in the app. Where a new test file goes, and the
-conventions the suites follow, are in [`testing.md`](testing.md) — read that before adding
-one.
+436 tests (71 unit, 365 integration), covering every Python module in the app. Where a
+new test file goes, and the conventions the suites follow, are in [`testing.md`](testing.md)
+— read that before adding one.
 
 | Area | Covered by |
 |---|---|
@@ -34,7 +34,7 @@ one.
 | Balances, net worth, cashflow | `wallet/tests/api/test_balance.py` |
 | The import wizard's endpoints | `wallet/tests/api/test_import_api.py` |
 | The manual transaction write path | `wallet/tests/api/test_transaction_api.py` |
-| Owner isolation | `wallet/tests/test_permissions.py` |
+| Owner isolation, including the desk tree view | `wallet/tests/test_permissions.py`, `test_treeview.py` |
 | Roles, per-user seeding, `as_user` | `wallet/tests/test_install.py` |
 | Setup endpoints, the apps-screen gate | `wallet/tests/api/test_setup.py`, `test_permission.py` |
 | `User.after_insert` | `wallet/tests/doc_events/test_user.py` |
