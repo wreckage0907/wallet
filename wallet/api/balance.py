@@ -202,6 +202,11 @@ def rebuild_balances() -> dict:
 	The explicit repair path for `cached_balance` staleness - exposed as a button on the
 	account form and run nightly by the scheduler.
 	"""
+	# db.set_value below skips document events, so the MCP gate has to be asked directly.
+	from wallet.mcp import gate
+
+	gate.check()
+
 	accounts = frappe.get_list("Wallet Account", pluck="name", limit_page_length=0)
 	for account in accounts:
 		refresh_cached_balance(account)

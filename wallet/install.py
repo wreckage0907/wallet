@@ -17,6 +17,7 @@ import contextlib
 
 import frappe
 
+from wallet.setup.custom_fields import create_wallet_custom_fields
 from wallet.setup.default_data import DEFAULT_CATEGORIES, DEFAULT_RULES
 
 WALLET_ROLE = "Wallet User"
@@ -28,6 +29,7 @@ def before_install() -> None:
 
 def after_install() -> None:
 	create_wallet_roles()
+	create_wallet_custom_fields()
 	for user in get_wallet_users():
 		seed_user_defaults(user)
 	frappe.db.commit()

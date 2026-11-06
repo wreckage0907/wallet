@@ -53,21 +53,57 @@ Current deliberate uses of `get_all`, all reviewed:
 
 ---
 
-## What the MCP endpoint does and does not contain
+## What MCP does and does not contain
+
+Wallet has no MCP endpoint of its own. Agents connect to Frappe's built-in server at
+`/api/v2/mcp` (v16.53+), which authenticates through the site's OAuth stack and runs every
+tool through REST API v2, so `has_permission` and `permission_query_conditions` apply to it
+exactly as they do to the PWA.
+
+### The agent gets generic CRUD, so the write gate is on the document
+
+The built-in server offers every connected agent `create_document`, `update_document`,
+`delete_document`, `call_method` and `call_document_method`. An agent never has to go
+through `wallet.mcp.tools.add_transaction` to write a Wallet Transaction, so a check inside
+that function would cover nothing.
+
+The gate is therefore enforced in `wallet/mcp/gate.py`, wired as `validate`, `on_trash`
+and `before_rename` on every Wallet doctype (`MCP_GATED_DOCTYPES` in `hooks.py`). A write
+over MCP needs **both**:
+
+- `Wallet Settings.allow_mcp_writes`, the site switch. Wallet Settings is itself gated,
+  so an agent cannot switch it on.
+- `User.wallet_allow_mcp_writes`, the user's own opt-in, default off. It is set from the
+  PWA's *More* screen (`wallet.api.mcp_access.set_mcp_writes`). `User.validate` refuses
+  any change to it over MCP, and any change made by someone other than that user,
+  Administrator included.
+
+**Decision (issue #22, audit finding 6): per-user opt-in, not site-wide alone.** One
+administrator switching on the site flag must not open the write path for every user
+who has connected an agent. The opt-in is a field on `User` rather than a Frappe user
+default because `frappe.client.set_default` is whitelisted: an agent could opt itself in
+with one `call_method`. A field changes through a document save, where the hook above
+catches it.
+The two whitelisted methods that write with `frappe.db.set_value` instead of a document
+save (`rebuild_balances`, `Wallet Account.refresh_cached_balance`) call `gate.check()`
+themselves. **A new raw write reachable from a whitelisted method needs the same call.**
+
+"This is an MCP request" is `frappe.local.mcp_request`, which `frappe.mcp.transport` sets.
+That is a framework internal, so `test_gate.py` pins it: a rename upstream fails CI rather
+than silently opening the gate.
+
+The read methods in `wallet.mcp.tools` are whitelisted for GET only. `call_method` runs
+such a method as a GET and rolls back afterwards, so the framework guarantees they write
+nothing.
 
 ### A Frappe OAuth bearer token is session-wide
 
 `validate_oauth` derives a token's required scopes from the token itself, not from the URL
-being called. A token issued for Wallet can reach **any** whitelisted method on the site as
-that user.
-
-This is why the MCP server is one endpoint rather than a read URL and a write URL.
-Splitting them looks like a boundary and is not one: a token issued for a "read-only" URL
-can POST to the write URL just as easily.
-
-`Wallet Settings.allow_mcp_writes` closes the Wallet write path specifically, checked
-inside the tool body so it holds however the endpoint is reached. **It does not contain a
-client you do not trust.**
+being called. A token issued to an MCP client can reach **any** whitelisted method and the
+REST API on the site as that user. The built-in server's generic tools therefore grant
+nothing the token could not already do. `allow_mcp_writes` closes the Wallet write path
+over MCP specifically. **It does not contain a client you do not trust**: the same token
+can still call the REST API directly.
 
 ### Connect as yourself, never as Administrator
 
@@ -78,27 +114,23 @@ response to indicate it happened.
 
 ### `readOnlyHint` is a hint
 
-Which tools an agent should reach for is expressed with MCP's own `readOnlyHint` /
-`destructiveHint` annotations. Clients use them to gate and confirm. They are not a
-server-side control; `allow_mcp_writes` is.
+The built-in tools carry MCP's `readOnlyHint` / `destructiveHint` annotations, and clients
+use them to gate and confirm. They are not a server-side control; `allow_mcp_writes` is.
 
 ---
 
-## Dynamic client registration needs HTTPS
+## Client registration
 
-Dynamic client registration requires **every** `redirect_uri` to be `https`, unless the
-site runs with `developer_mode` on (`frappe/integrations/utils.py`). There is no loopback
-exemption.
-
-MCP clients register loopback redirects like `http://localhost:<port>/callback`, so on a
-production site the self-registration flow fails with `redirect_uris must be https`.
-Either register an OAuth Client by hand, or keep `developer_mode` on.
-
-This is a `developer_mode` distinction, not a local-versus-remote one.
+Dynamic client registration is on by default. Loopback redirect URIs
+(`http://localhost:<port>/...`, `http://127.0.0.1:<port>/...`) are accepted as secure, so
+MCP clients self-register on production sites without `developer_mode`
+(`_is_secure_redirect_uri` in `frappe/integrations/utils.py`). Any other non-https
+redirect still requires `developer_mode`.
 
 Browser-based clients such as the MCP Inspector additionally need their origin listed in
-`OAuth Settings → Allowed Public Client Origins`, which is empty by default. Native
-clients (Claude Code, Claude Desktop) do not.
+`OAuth Settings → Allowed Public Client Origins`, which is empty by default; the MCP
+transport refuses a cross-origin request unless `allow_cors` lists it. Native clients
+(Claude Code, Claude Desktop) need neither.
 
 ---
 

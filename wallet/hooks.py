@@ -295,9 +295,30 @@ page_renderer = ["wallet.pwa.PWAAssetRenderer"]
 before_install = "wallet.install.before_install"
 after_install = "wallet.install.after_install"
 
+#: Every Wallet doctype a write can target on its own. Child tables are left out: they are
+#: only ever written through their parent, which is listed.
+MCP_GATED_DOCTYPES = (
+	"Wallet Account",
+	"Wallet Bank",
+	"Wallet Categorization Rule",
+	"Wallet Category",
+	"Wallet Settings",
+	"Wallet Statement Format",
+	"Wallet Statement Import",
+	"Wallet Transaction",
+)
+
 doc_events = {
 	"User": {
 		"after_insert": "wallet.install.seed_user_defaults_for_new_user",
+		# The per-user half of the MCP write gate: only the user, and never over MCP.
+		"validate": "wallet.mcp.gate.guard_opt_in",
+	},
+	# The MCP write gate: `Wallet Settings.allow_mcp_writes`, enforced for every write that
+	# reaches a Wallet document over Frappe's built-in MCP server. See wallet/mcp/gate.py.
+	**{
+		doctype: {event: "wallet.mcp.gate.on_write" for event in ("validate", "on_trash", "before_rename")}
+		for doctype in MCP_GATED_DOCTYPES
 	},
 }
 
