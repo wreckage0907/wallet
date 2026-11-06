@@ -90,12 +90,35 @@ class TestGetContextForDev(IntegrationTestCase):
 		finally:
 			frappe.conf.developer_mode = previous
 
-	def test_it_returns_the_boot_payload_in_developer_mode(self):
+	def dev_boot(self):
 		previous = frappe.conf.developer_mode
 		frappe.conf.developer_mode = 1
 		try:
-			boot = get_context_for_dev()
+			return get_context_for_dev()
 		finally:
 			frappe.conf.developer_mode = previous
 
+	def test_it_returns_the_boot_payload_in_developer_mode(self):
+		boot = self.dev_boot()
+
 		self.assertEqual(boot["user"], frappe.session.user)
+
+	def test_it_carries_the_sessions_csrf_token(self):
+		"""Under Vite the template is never rendered, so this is the only way the shell
+		gets a token - and without one every POST fails with "Invalid Request"."""
+		user = make_user("dev-boot-holder@example.com")
+		commit()
+
+		with set_user(user):
+			boot = self.dev_boot()
+			self.assertTrue(boot["csrf_token"])
+			self.assertEqual(boot["csrf_token"], frappe.session.data.csrf_token)
+
+	def test_a_guest_gets_no_csrf_token(self):
+		with set_user("Guest"):
+			self.assertNotIn("csrf_token", self.dev_boot())
+
+	def test_it_is_callable_over_get(self):
+		"""The shell has no token yet, and a POST without one is refused before the method
+		ever runs. GETs are not CSRF-checked."""
+		self.assertIn("GET", frappe.allowed_http_methods_for_whitelisted_func[get_context_for_dev])

@@ -14,13 +14,24 @@ def get_context():
 	return context
 
 
-@frappe.whitelist(methods=["POST"], allow_guest=True)
+@frappe.whitelist(methods=["GET"], allow_guest=True)
 def get_context_for_dev() -> dict:
 	"""Boot payload for `yarn dev`, where the page is served by Vite and never passes
-	through this template."""
+	through this template.
+
+	That includes the CSRF token, which is otherwise only ever rendered into the page:
+	without it every POST the shell makes under Vite fails with "Invalid Request". It has
+	to be a GET for the same reason - Frappe does not CSRF-check GETs, and the caller has
+	no token yet. Handing the token out is no wider than the rendered page already is: a
+	cross-origin page can make the request but cannot read the response.
+	"""
 	if not frappe.conf.developer_mode:
 		frappe.throw(frappe._("This method is only meant for developer mode"))
-	return get_boot()
+
+	boot = get_boot()
+	if frappe.session.user != "Guest":
+		boot.csrf_token = frappe.sessions.get_csrf_token()
+	return boot
 
 
 def get_boot() -> frappe._dict:
