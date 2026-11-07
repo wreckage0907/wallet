@@ -1,0 +1,297 @@
+/* Wallet's public site. No web fonts, no scripts, no third-party requests: the privacy
+   policy says the site does not track you, and the simplest way to keep that true is to
+   load nothing from anywhere else. */
+
+:root {
+	--bg: #ffffff;
+	--surface: #f7f7f8;
+	--text: #171717;
+	--muted: #5f6368;
+	--line: #e4e4e7;
+	--accent: #0b6bcb;
+	--accent-text: #ffffff;
+	--code: #f1f1f3;
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #121212;
+		--surface: #1c1c1e;
+		--text: #ececec;
+		--muted: #a1a1aa;
+		--line: #2e2e33;
+		--accent: #4ea1f5;
+		--accent-text: #0b0b0b;
+		--code: #26262a;
+		color-scheme: dark;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+a {
+	color: var(--accent);
+	text-underline-offset: 2px;
+}
+
+code {
+	font: 0.9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	background: var(--code);
+	padding: 0.1em 0.35em;
+	border-radius: 4px;
+	overflow-wrap: anywhere;
+}
+
+pre {
+	background: var(--code);
+	padding: 14px 16px;
+	border-radius: 8px;
+	overflow-x: auto;
+}
+
+pre code {
+	background: none;
+	padding: 0;
+}
+
+.wrap {
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 0 16px;
+}
+
+.prose {
+	max-width: 720px;
+}
+
+header.site {
+	border-bottom: 1px solid var(--line);
+}
+
+header.site .wrap {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	min-height: 60px;
+	flex-wrap: wrap;
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-weight: 650;
+	color: var(--text);
+	text-decoration: none;
+}
+
+.brand img {
+	width: 28px;
+	height: 28px;
+}
+
+nav.site {
+	display: flex;
+	gap: 18px;
+	flex-wrap: wrap;
+	font-size: 15px;
+}
+
+nav.site a {
+	color: var(--muted);
+	text-decoration: none;
+}
+
+nav.site a:hover {
+	color: var(--text);
+}
+
+.hero {
+	padding-top: 56px;
+	padding-bottom: 32px;
+}
+
+.hero h1 {
+	font-size: clamp(30px, 5vw, 44px);
+	line-height: 1.15;
+	margin: 0 0 14px;
+	letter-spacing: -0.01em;
+}
+
+.hero p.lede {
+	font-size: 19px;
+	color: var(--muted);
+	max-width: 640px;
+	margin: 0 0 24px;
+}
+
+.actions {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.button {
+	display: inline-block;
+	padding: 10px 18px;
+	border-radius: 8px;
+	border: 1px solid var(--line);
+	color: var(--text);
+	text-decoration: none;
+	font-weight: 550;
+}
+
+.button.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-text);
+}
+
+section {
+	padding: 32px 0;
+}
+
+section h2 {
+	font-size: 24px;
+	margin: 0 0 18px;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 16px;
+}
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	padding: 18px 20px;
+}
+
+.card h3 {
+	font-size: 17px;
+	margin: 0 0 6px;
+}
+
+.card p {
+	margin: 0;
+	color: var(--muted);
+}
+
+.shots {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
+}
+
+.shots figure {
+	margin: 0;
+}
+
+.shots img {
+	width: 100%;
+	height: auto;
+	border-radius: 12px;
+	border: 1px solid var(--line);
+	display: block;
+}
+
+.shots figcaption {
+	font-size: 14px;
+	color: var(--muted);
+	margin-top: 8px;
+}
+
+.wide img {
+	width: 100%;
+	height: auto;
+	border-radius: 12px;
+	border: 1px solid var(--line);
+	display: block;
+}
+
+@media (max-width: 640px) {
+	.shots {
+		grid-template-columns: 1fr;
+	}
+}
+
+.prose h1 {
+	font-size: 32px;
+	line-height: 1.2;
+	margin: 40px 0 6px;
+}
+
+.prose h2 {
+	font-size: 21px;
+	margin: 32px 0 8px;
+}
+
+.prose .meta {
+	color: var(--muted);
+	margin: 0 0 24px;
+}
+
+.prose li {
+	margin: 4px 0;
+}
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 12px 0;
+	font-size: 15px;
+}
+
+th,
+td {
+	text-align: left;
+	vertical-align: top;
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--line);
+}
+
+.table-scroll {
+	overflow-x: auto;
+}
+
+footer.site {
+	border-top: 1px solid var(--line);
+	margin-top: 40px;
+	padding: 24px 0 40px;
+	color: var(--muted);
+	font-size: 14px;
+}
+
+footer.site .wrap {
+	display: flex;
+	gap: 18px;
+	flex-wrap: wrap;
+	justify-content: space-between;
+}
+
+footer.site nav {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+footer.site a {
+	color: var(--muted);
+}

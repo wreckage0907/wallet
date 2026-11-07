@@ -1,0 +1,49 @@
+name: Pages
+
+# The public site at https://wreckage0907.github.io/wallet/: the landing page and the
+# privacy policy and terms the Frappe Cloud Marketplace listing links to. Static files in
+# site/, plus the screenshots from docs/images, copied in at build time so the repository
+# keeps one copy of each image.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "docs/images/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, and never cancel one halfway through.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/images
+          cp site/*.html site/*.css _site/
+          cp docs/images/*.png docs/images/*.svg _site/images/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
