@@ -16,7 +16,7 @@ columns, ECMA-376 password-protected xlsx, INR defaults, and seed categorization
 for Swiggy / Zomato / FASTag / NACH-EMI / salary narrations.
 
 - **App name:** `wallet` · **Module:** `Wallet` · **Version:** `0.0.1` · **License:** MIT
-- **Routes:** `/wallet` (PWA), `/app/wallet` (desk workspace),
+- **Routes:** `/wallet` (PWA), `/desk/wallet` (desk workspace),
   `/api/v2/mcp` (Frappe's built-in MCP server; Wallet adds `wallet.mcp.tools.*`)
 
 ## Planning / Spec-ing

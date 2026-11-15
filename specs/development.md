@@ -68,7 +68,7 @@ BASE_URL=http://<site>:8000 yarn test:e2e:ui    # pick and watch individual spec
 | Path | Project | What it covers |
 |---|---|---|
 | `e2e/tests/pwa/` | `pwa` (Pixel 7) | the mobile PWA at `/wallet` |
-| `e2e/tests/desk/` | `desk` (Desktop Chrome) | the desk workspace at `/app/wallet` |
+| `e2e/tests/desk/` | `desk` (Desktop Chrome) | the desk workspace at `/desk/wallet` |
 | `e2e/tests/api/` | `desk` | owner isolation, straight at `/api/resource` |
 
 **The suite never logs in as Administrator.** `permissions.py` exempts it from owner
