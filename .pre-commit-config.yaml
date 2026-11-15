@@ -34,6 +34,10 @@ repos:
     rev: v2.7.1
     hooks:
       - id: prettier
+        # Pinned so pre-commit never asks nodeenv for "latest": nodeenv 1.11 cannot parse the
+        # 27.0.0-alpha entries now in Node's release index, and a node or npm under $HOME (nvm,
+        # ~/.local/bin) makes pre-commit download one instead of using it. Matches CI's Node 24.
+        language_version: 24.22.3
         types_or: [javascript, vue, scss]
         # Ignore any files that might contain jinja / bundles
         exclude: |
@@ -50,6 +54,7 @@ repos:
     rev: v8.44.0
     hooks:
       - id: eslint
+        language_version: 24.22.3
         types_or: [javascript]
         args: ['--quiet']
         # Ignore any files that might contain jinja / bundles
